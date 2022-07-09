@@ -61,7 +61,7 @@ export const GenerateNominations = (props: any) => {
     return _favs;
   };
 
-  const fetchMostProfitable = () => {
+  const fetchRandom = () => {
     // generate nominations from validator list
     let _nominations = Object.assign(validators);
     // filter validators to find profitable candidates
@@ -72,16 +72,21 @@ export const GenerateNominations = (props: any) => {
       'inactive',
       'missing_identity',
     ]);
-    // order validators to find profitable candidates
-    _nominations = applyValidatorOrder(_nominations, 'commission');
-    // TODO: unbiased shuffle resulting validators
-    // _nominations = shuffle(_nominations);
+    _nominations = shuffleArray(_nominations);
     // choose subset of validators
     if (_nominations.length) {
       _nominations = _nominations.slice(0, 16);
     }
     return _nominations;
   };
+
+  const shuffleArray = (array: []) => {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+  }
 
   useEffect(() => {
     if (!isReady || !validators.length) {
@@ -104,8 +109,8 @@ export const GenerateNominations = (props: any) => {
         case 'Favourites':
           _nominations = fetchFavourites();
           break;
-        case 'Most Profitable':
-          _nominations = fetchMostProfitable();
+        case 'Random':
+          _nominations = fetchRandom();
           break;
         default:
           return;
@@ -193,12 +198,12 @@ export const GenerateNominations = (props: any) => {
             <Container>
               <Category title="Generate Method">
                 <Item
-                  label="Most Profitable"
+                  label="Random"
                   icon={faStar}
                   transform="grow-2"
                   active={false}
                   onClick={() => {
-                    setMethod('Most Profitable');
+                    setMethod('Random');
                     removeValidatorMetaBatch(batchKey);
                     setNominations([]);
                     setFetching(true);
