@@ -295,7 +295,7 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
 
   const filterAllCommission = (list: any) => {
     list = list.filter(
-      (validator: any) => validator?.prefs?.commission !== 100
+      (validator: any) => validator?.prefs?.commission < 10
     );
     return list;
   };
