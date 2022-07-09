@@ -1,23 +1,23 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { useState, useRef } from 'react';
-import { useApi } from 'contexts/Api';
-import { useUi } from 'contexts/UI';
-import { usePrices } from 'library/Hooks/usePrices';
-import { CONNECTION_SYMBOL_COLORS } from 'consts';
-import { NETWORKS } from 'config/networks';
-import { ConnectionStatus } from 'contexts/Api/types';
-import { useOutsideAlerter } from 'library/Hooks';
+import { useState, useRef } from "react";
+import { useApi } from "contexts/Api";
+import { useUi } from "contexts/UI";
+import { usePrices } from "library/Hooks/usePrices";
+import { CONNECTION_SYMBOL_COLORS } from "consts";
+import { NETWORKS } from "config/networks";
+import { ConnectionStatus } from "contexts/Api/types";
+import { useOutsideAlerter } from "library/Hooks";
 import {
   Wrapper,
   Summary,
   ConnectionSymbol,
   NetworkInfo,
-  Separator,
-} from './Wrappers';
-import { BlockNumber } from './BlockNumber';
-import { Status } from './Status';
+  Separator
+} from "./Wrappers";
+import { BlockNumber } from "./BlockNumber";
+import { Status } from "./Status";
 
 export const NetworkBar = () => {
   const { services } = useUi();
@@ -37,14 +37,14 @@ export const NetworkBar = () => {
   // handle expand transitions
   const variants = {
     minimised: {
-      height: '2.5rem',
+      height: "2.5rem"
     },
     maximised: {
-      height: '155px',
-    },
+      height: "155px"
+    }
   };
 
-  const animate = open ? 'maximised' : 'minimised';
+  const animate = open ? "maximised" : "minimised";
   const ref = useRef(null);
 
   const PRIVACY_URL = process.env.REACT_APP_PRIVACY_URL;
@@ -55,7 +55,7 @@ export const NetworkBar = () => {
     () => {
       setOpen(false);
     },
-    ['igignore-network-info-toggle']
+    ["igignore-network-info-toggle"]
   );
 
   return (
@@ -65,8 +65,8 @@ export const NetworkBar = () => {
       animate={animate}
       transition={{
         duration: 0.4,
-        type: 'spring',
-        bounce: 0.25,
+        type: "spring",
+        bounce: 0.25
       }}
       variants={variants}
     >
@@ -93,31 +93,31 @@ export const NetworkBar = () => {
               setOpen(!open);
             }}
           >
-            {open ? 'Collapse' : 'Switch Network'}
+            {open ? "Collapse" : "Switch Network"}
           </button>
           <div className="stat" style={{ marginRight: 0 }}>
             {status === ConnectionStatus.Connected && <BlockNumber />}
             <ConnectionSymbol color={symbolColor} />
           </div>
           <div className="hide-small">
-            {services.includes('binance_spot') && (
+            {services.includes("binance_spot") && (
               <>
                 <div className="stat">
                   <span
                     className={`change${
-                      prices.change < 0
-                        ? ' neg'
-                        : prices.change > 0
-                        ? ' pos'
-                        : ''
+                      prices?.change < 0
+                        ? " neg"
+                        : prices?.change > 0
+                        ? " pos"
+                        : ""
                     }`}
                   >
-                    {prices.change < 0 ? '' : prices.change > 0 ? '+' : ''}
-                    {prices.change}%
+                    {prices?.change < 0 ? "" : prices?.change > 0 ? "+" : ""}
+                    {prices?.change}%
                   </span>
                 </div>
                 <div className="stat">
-                  1 {network.api.unit} / {prices.lastPrice} USD
+                  1 {network.api.unit} / {prices?.lastPrice} USD
                 </div>
                 <Separator />
               </>

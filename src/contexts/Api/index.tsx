@@ -1,9 +1,9 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import React, { useState, useEffect } from 'react';
-import { ApiPromise, WsProvider } from '@polkadot/api';
-import BN from 'bn.js';
+import React, { useState, useEffect } from "react";
+import { ApiPromise, WsProvider } from "@polkadot/api";
+import BN from "bn.js";
 import {
   BONDING_DURATION,
   SESSIONS_PER_ERA,
@@ -11,17 +11,17 @@ import {
   MAX_NOMINATIONS,
   API_ENDPOINTS,
   MAX_ELECTING_VOTERS,
-  EXPECTED_BLOCK_TIME,
-} from 'consts';
-import { NETWORKS } from 'config/networks';
+  EXPECTED_BLOCK_TIME
+} from "consts";
+import { NETWORKS } from "config/networks";
 import {
   APIContextInterface,
   NetworkState,
   APIConstants,
-  ConnectionStatus,
-} from 'contexts/Api/types';
-import { Network, NetworkName } from 'types';
-import * as defaults from './defaults';
+  ConnectionStatus
+} from "contexts/Api/types";
+import { Network, NetworkName } from "types";
+import * as defaults from "./defaults";
 
 export const APIContext = React.createContext<APIContextInterface>(
   defaults.defaultApiContext
@@ -38,11 +38,11 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
 
   // network state
   const _name: NetworkName =
-    (localStorage.getItem('network') as NetworkName) ?? NetworkName.Polkadex;
+    (localStorage.getItem("network") as NetworkName) ?? NetworkName.Polkadex;
 
   const [network, setNetwork] = useState<NetworkState>({
     name: _name,
-    meta: NETWORKS[localStorage.getItem('network') as NetworkName],
+    meta: NETWORKS[localStorage.getItem("network") as NetworkName]
   });
 
   // constants state
@@ -56,7 +56,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
   // initial connection
   useEffect(() => {
     const _network: NetworkName = localStorage.getItem(
-      'network'
+      "network"
     ) as NetworkName;
     connect(_network);
   }, []);
@@ -64,10 +64,10 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
   // provider event handlers
   useEffect(() => {
     if (provider !== null) {
-      provider.on('connected', () => {
+      provider.on("connected", () => {
         setConnectionStatus(ConnectionStatus.Connected);
       });
-      provider.on('error', () => {
+      provider.on("error", () => {
         setConnectionStatus(ConnectionStatus.Disconnected);
       });
       connectedCallback(provider);
@@ -79,7 +79,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     const _api = new ApiPromise({ provider: _provider });
     await _api.isReady;
 
-    localStorage.setItem('network', String(network.name));
+    localStorage.setItem("network", String(network.name));
 
     // constants
     const promises = [
@@ -89,7 +89,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
       _api.consts.staking.maxNominatorRewardedPerValidator,
       _api.consts.electionProviderMultiPhase.maxElectingVoters,
       _api.consts.babe.expectedBlockTime,
-      _api.consts.balances.existentialDeposit,
+      _api.consts.balances.existentialDeposit
     ];
 
     // pools constants
@@ -140,7 +140,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
       maxElectingVoters,
       expectedBlockTime,
       poolsPalletId,
-      existentialDeposit,
+      existentialDeposit
     });
   };
 
@@ -151,7 +151,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
 
     setNetwork({
       name: _network,
-      meta: NETWORKS[_network],
+      meta: NETWORKS[_network]
     });
     setProvider(_provider);
   };
@@ -167,30 +167,34 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // handles fetching of DOT price and updates context state.
-  const fetchDotPrice = async () => {
+  const fetchNetworkTokenPrice = async () => {
     const urls = [
-      `${API_ENDPOINTS.priceChange}${NETWORKS[network.name].api.priceTicker}`,
+      `${API_ENDPOINTS.priceChange}${network.name}`
     ];
     const responses = await Promise.all(
-      urls.map((u) => fetch(u, { method: 'GET' }))
+      urls.map((u) => fetch(u, { method: "GET" }))
     );
     const texts = await Promise.all(responses.map((res) => res.json()));
-    const _change = texts[0];
+    const _change = texts[0]?.data;
 
+    console.log(_change, _change.price.USD, _change.histPrices["24H"].USD);
     if (
-      _change.lastPrice !== undefined &&
-      _change.priceChangePercent !== undefined
+      _change.price !== undefined &&
+      _change.histPrices !== undefined
     ) {
-      const price: string = (Math.ceil(_change.lastPrice * 100) / 100).toFixed(
+      const currentPrice = _change.price.USD;
+      const dayOldPrice = _change.histPrices["24H"].USD;
+      const price: string = (Math.ceil(currentPrice * 100) / 100).toFixed(
         2
       );
       const change: string = (
-        Math.round(_change.priceChangePercent * 100) / 100
+        Math.round((currentPrice - dayOldPrice) / dayOldPrice * 100 * 100) / 100
       ).toFixed(2);
 
+      console.log("price", price, change);
       return {
         lastPrice: price,
-        change,
+        change
       };
     }
     return null;
@@ -200,14 +204,14 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     <APIContext.Provider
       value={{
         connect,
-        fetchDotPrice,
+        fetchNetworkTokenPrice,
         switchNetwork,
         api,
         consts,
         isReady:
           connectionStatus === ConnectionStatus.Connected && api !== null,
         network: network.meta,
-        status: connectionStatus,
+        status: connectionStatus
       }}
     >
       {children}

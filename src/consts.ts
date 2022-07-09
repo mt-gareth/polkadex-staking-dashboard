@@ -83,9 +83,9 @@ export const MAX_PAYOUT_DAYS = 60;
  * Third party API keys and endpoints
  */
 export const API_SUBSCAN_KEY = "d37149339f64775155a82a53f4253b27";
-export const ENDPOINT_PRICE = "https://api.binance.com/api/v3";
+export const ENDPOINT_PRICE = "https://api.cryptorank.io/v0/coins/";
 export const API_ENDPOINTS = {
-  priceChange: `${ENDPOINT_PRICE}/ticker/24hr?symbol=`,
+  priceChange: `${ENDPOINT_PRICE}`,
   subscanRewardSlash: "/api/scan/account/reward_slash",
   subscanPoolRewards: "/api/scan/nomination_pool/rewards",
   subscanEraStat: "/api/scan/staking/era_stat"

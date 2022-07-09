@@ -26,7 +26,7 @@ export const defaultApiContext: APIContextInterface = {
   connect: async () => {
     await new Promise((resolve) => resolve(null));
   },
-  fetchDotPrice: () => {},
+  fetchNetworkTokenPrice: () => {},
   // eslint-disable-next-line
   switchNetwork: async (_network) => {
     await new Promise((resolve) => resolve(null));

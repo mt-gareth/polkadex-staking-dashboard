@@ -6,7 +6,7 @@ import { useApi } from 'contexts/Api';
 import { useUi } from 'contexts/UI';
 
 export const usePrices = () => {
-  const { network, fetchDotPrice } = useApi();
+  const { network, fetchNetworkTokenPrice } = useApi();
   const { services } = useUi();
 
   const pricesLocalStorage = () => {
@@ -35,7 +35,7 @@ export const usePrices = () => {
   };
 
   const initiatePriceInterval = async () => {
-    const _prices = await fetchDotPrice();
+    const _prices = await fetchNetworkTokenPrice();
     setPrices(_prices);
     if (priceHandle === null) {
       setPriceInterval();
@@ -45,7 +45,7 @@ export const usePrices = () => {
   let priceHandle: any = null;
   const setPriceInterval = async () => {
     priceHandle = setInterval(async () => {
-      const _prices = await fetchDotPrice();
+      const _prices = await fetchNetworkTokenPrice();
       setPrices(_prices);
     }, 1000 * 30);
   };
