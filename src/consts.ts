@@ -1,46 +1,46 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { stringToU8a } from '@polkadot/util';
+import { stringToU8a } from "@polkadot/util";
 
 /*
  * Global Constants
  */
-export const URI_PREFIX = '/dashboard';
-export const TITLE_DEFAULT = 'Polkadex Staking Dashboard';
-export const DAPP_NAME = 'polkadex_staking_dashboard';
-export const POLKADEX_URL = 'https://polkadex.trade';
+export const URI_PREFIX = "/";
+export const TITLE_DEFAULT = "Polkadex Staking Dashboard";
+export const DAPP_NAME = "polkadex_staking_dashboard";
+export const POLKADEX_URL = "https://polkadex.trade";
 
-export const POLKADEX_ENDPOINT = 'wss://mainnet.polkadex.trade';
-export const DEFAULT_NETWORK = 'polkadex';
-export const ACTIVE_NETWORK = 'polkadex';
+export const POLKADEX_ENDPOINT = "wss://mainnet.polkadex.trade";
+export const DEFAULT_NETWORK = "polkadex";
+export const ACTIVE_NETWORK = "polkadex";
 
 /*
  * Data Structure Helpers
  */
 export const EMPTY_H256 = new Uint8Array(32);
-export const MOD_PREFIX = stringToU8a('modl');
+export const MOD_PREFIX = stringToU8a("modl");
 export const U32_OPTS = { bitLength: 32, isLe: true };
 
 export const CONNECTION_SYMBOL_COLORS: { [key: string]: string } = {
-  disconnected: 'red',
-  connecting: 'orange',
-  connected: 'green',
+  disconnected: "red",
+  connecting: "orange",
+  connected: "green"
 };
 
 export const PAYEE_STATUS = [
   {
-    key: 'Staked',
-    name: 'Back to Staking',
+    key: "Staked",
+    name: "Back to Staking"
   },
   {
-    key: 'Stash',
-    name: 'To Stash Account',
+    key: "Stash",
+    name: "To Stash Account"
   },
   {
-    key: 'Controller',
-    name: 'To Controller Account',
-  },
+    key: "Controller",
+    name: "To Controller Account"
+  }
 ];
 
 export const INTERFACE_MAXIMUM_WIDTH = 1800;
@@ -57,7 +57,7 @@ export const GRAPH_HEIGHT = 390;
 /*
  * Toggle-able services
  */
-export const SERVICES = ['subscan', 'binance_spot'];
+export const SERVICES = ["subscan", "binance_spot"];
 
 /*
  * Fallback config values
@@ -82,11 +82,11 @@ export const MAX_PAYOUT_DAYS = 60;
 /*
  * Third party API keys and endpoints
  */
-export const API_SUBSCAN_KEY = 'd37149339f64775155a82a53f4253b27';
-export const ENDPOINT_PRICE = 'https://api.binance.com/api/v3';
+export const API_SUBSCAN_KEY = "d37149339f64775155a82a53f4253b27";
+export const ENDPOINT_PRICE = "https://api.binance.com/api/v3";
 export const API_ENDPOINTS = {
   priceChange: `${ENDPOINT_PRICE}/ticker/24hr?symbol=`,
-  subscanRewardSlash: '/api/scan/account/reward_slash',
-  subscanPoolRewards: '/api/scan/nomination_pool/rewards',
-  subscanEraStat: '/api/scan/staking/era_stat',
+  subscanRewardSlash: "/api/scan/account/reward_slash",
+  subscanPoolRewards: "/api/scan/nomination_pool/rewards",
+  subscanEraStat: "/api/scan/staking/era_stat"
 };

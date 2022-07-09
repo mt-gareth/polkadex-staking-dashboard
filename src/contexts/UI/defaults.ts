@@ -36,7 +36,7 @@ export const defaultUIContext: UIContextInterface = {
   userSideMenuMinimised: 0,
   sideMenuMinimised: 0,
   services: [],
-  validatorFilters: [],
+  validatorFilters: ['over_subscribed', 'all_commission', 'blocked_nominations', 'missing_identity'],
   validatorOrder: 'default',
   onSetup: 0,
   isSyncing: false,

@@ -1,7 +1,7 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { u8aToString, u8aUnwrapBytes } from '@polkadot/util';
+import { u8aToString, u8aUnwrapBytes } from "@polkadot/util";
 
 export const getIdentityDisplay = (identity: any, _superIdentity: any) => {
   // first check identity of validator
@@ -14,7 +14,7 @@ export const getIdentityDisplay = (identity: any, _superIdentity: any) => {
   // check if identity has been byte encoded
   const displayAsBytes = u8aToString(u8aUnwrapBytes(display));
 
-  if (displayAsBytes !== '') {
+  if (displayAsBytes !== "") {
     return displayAsBytes;
   }
   if (display !== null) {
@@ -25,14 +25,14 @@ export const getIdentityDisplay = (identity: any, _superIdentity: any) => {
   const superIdentity = _superIdentity?.identity ?? null;
 
   // display.Raw
-  display = superIdentity?.info?.display?.Raw ?? null;
+  display = superIdentity?.info?.display?.Raw ? superIdentity?.info?.display?.Raw + "/" + _superIdentity[1].Raw : null;
   // legal.Raw
   display = display === null ? superIdentity?.info?.legal.Raw ?? null : display;
 
   // check if super identity has been byte encoded
   const superIdentityAsBytes = u8aToString(u8aUnwrapBytes(display));
 
-  if (superIdentityAsBytes !== '') {
+  if (superIdentityAsBytes !== "") {
     return superIdentityAsBytes;
   }
   if (display !== null) {
