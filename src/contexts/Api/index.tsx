@@ -176,7 +176,7 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
     );
     const texts = await Promise.all(responses.map((res) => res.json()));
     const _change = texts[0]?.data;
-
+    console.log(_change);
     if (
       _change.price !== undefined &&
       _change.histPrices !== undefined
@@ -189,7 +189,10 @@ export const APIProvider = ({ children }: { children: React.ReactNode }) => {
       const change: string = (
         Math.round((currentPrice - dayOldPrice) / dayOldPrice * 100 * 100) / 100
       ).toFixed(2);
-
+      console.log({
+        lastPrice: price,
+        change
+      });
       return {
         lastPrice: price,
         change
