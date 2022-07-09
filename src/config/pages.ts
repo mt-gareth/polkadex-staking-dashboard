@@ -35,14 +35,6 @@ export const PAGE_CATEGORIES: PageCategories = [
     _id: 3,
     title: 'Validators',
   },
-  {
-    _id: 4,
-    title: 'Explore',
-  },
-  {
-    _id: 5,
-    title: 'Feedback',
-  },
 ];
 
 export const PAGES_CONFIG: PagesConfig = [
@@ -93,22 +85,6 @@ export const PAGES_CONFIG: PagesConfig = [
     hash: '/favourites',
     Entry: Favourites,
     icon: faThumbtack,
-  },
-  {
-    category: 4,
-    title: 'Community',
-    uri: `${URI_PREFIX}/community`,
-    hash: '/community',
-    Entry: Projects,
-    icon: faUserFriends,
-  },
-  {
-    category: 5,
-    title: 'Feedback',
-    uri: `${URI_PREFIX}/feedback`,
-    hash: '/feedback',
-    Entry: Feedback,
-    icon: faComment,
   },
 ];
 
