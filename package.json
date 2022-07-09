@@ -69,7 +69,7 @@
     "predeploy": "yarn run build",
     "deploy": "gh-pages -d build",
     "build": "react-scripts build",
-    "build:netlify": "DISABLE_ESLINT_PLUGIN='true' REACT_APP_ORGANISATION='© PDEX Help' REACT_APP_PRIVACY_URL=https://polkadot.network/privacy/ REACT_APP_DISABLE_FIAT=1 BUILD_PATH='./build' react-scripts build",
+    "build:netlify": "DISABLE_ESLINT_PLUGIN=true REACT_APP_ORGANISATION='© PDEX Help' REACT_APP_PRIVACY_URL=https://polkadot.network/privacy/ REACT_APP_DISABLE_FIAT=0 BUILD_PATH='./build' react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },

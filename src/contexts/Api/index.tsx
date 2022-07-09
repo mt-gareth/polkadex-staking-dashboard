@@ -21,6 +21,7 @@ import {
   ConnectionStatus
 } from "contexts/Api/types";
 import { Network, NetworkName } from "types";
+// @ts-ignore
 import * as defaults from "./defaults";
 
 export const APIContext = React.createContext<APIContextInterface>(
