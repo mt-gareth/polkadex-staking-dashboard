@@ -18,7 +18,7 @@ import { useBalances } from 'contexts/Balances';
 import { useStaking } from 'contexts/Staking';
 import { ReactComponent as CogOutlineSVG } from 'img/cog-outline.svg';
 import { ReactComponent as LogoGithubSVG } from 'img/logo-github.svg';
-import { URI_PREFIX, POLKADOT_URL, SIDE_MENU_STICKY_THRESHOLD } from 'consts';
+import { URI_PREFIX, POLKADEX_URL, SIDE_MENU_STICKY_THRESHOLD } from 'consts';
 import { useOutsideAlerter } from 'library/Hooks';
 import { PAGE_CATEGORIES, PAGES_CONFIG } from 'config/pages';
 import { usePalette } from 'contexts/Palette';
@@ -131,7 +131,7 @@ export const SideMenu = () => {
 
         <LogoWrapper
           onClick={() => {
-            window.open(POLKADOT_URL, '_blank');
+            window.open(POLKADEX_URL, '_blank');
           }}
           minimised={sideMenuMinimised}
         >

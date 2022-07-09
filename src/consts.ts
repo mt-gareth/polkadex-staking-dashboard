@@ -7,14 +7,13 @@ import { stringToU8a } from '@polkadot/util';
  * Global Constants
  */
 export const URI_PREFIX = '/dashboard';
-export const TITLE_DEFAULT = 'Polkadot Staking Dashboard';
-export const DAPP_NAME = 'polkadot_staking_dashboard';
-export const POLKADOT_URL = 'https://polkadot.network';
+export const TITLE_DEFAULT = 'Polkadex Staking Dashboard';
+export const DAPP_NAME = 'polkadex_staking_dashboard';
+export const POLKADEX_URL = 'https://polkadex.trade';
 
-export const POLKADOT_ENDPOINT = 'wss://rpc.polkadot.io';
-export const WESTEND_ENDPOINT = 'wss://westend-rpc.polkadot.io';
-export const DEFAULT_NETWORK = 'polkadot';
-export const ACTIVE_NETWORK = 'polkadot';
+export const POLKADEX_ENDPOINT = 'wss://mainnet.polkadex.trade';
+export const DEFAULT_NETWORK = 'polkadex';
+export const ACTIVE_NETWORK = 'polkadex';
 
 /*
  * Data Structure Helpers
