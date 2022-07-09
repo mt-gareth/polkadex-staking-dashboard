@@ -3,7 +3,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import BN from 'bn.js';
-// eslint-disable-next-line import/no-webpack-loader-syntax, import/no-unresolved
 import Worker from 'worker-loader!../../workers/stakers';
 import {
   rmCommas,
