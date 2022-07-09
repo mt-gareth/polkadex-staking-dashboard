@@ -59,19 +59,6 @@
     "@types/react-dom": "^18.0.5",
     "@types/styled-components": "^5.1.21",
     "@types/window-or-global": "^1.0.4",
-    "@typescript-eslint/eslint-plugin": "^5.25.0",
-    "@typescript-eslint/parser": "^5.25.0",
-    "eslint": "^7.32.0 || ^8.2.0",
-    "eslint-config-airbnb": "^19.0.4",
-    "eslint-config-prettier": "^8.5.0",
-    "eslint-import-resolver-typescript": "^2.7.1",
-    "eslint-plugin-import": "^2.25.3",
-    "eslint-plugin-jsx-a11y": "^6.5.1",
-    "eslint-plugin-prefer-arrow": "^1.2.3",
-    "eslint-plugin-prefer-arrow-functions": "^3.1.4",
-    "eslint-plugin-prettier": "^4.0.0",
-    "eslint-plugin-react": "^7.28.0",
-    "eslint-plugin-react-hooks": "^4.3.0",
     "gh-pages": "^3.2.3",
     "prettier": "^2.6.2",
     "terser-webpack-plugin": "^5.3.3",
@@ -82,10 +69,9 @@
     "predeploy": "yarn run build",
     "deploy": "gh-pages -d build",
     "build": "react-scripts build",
-    "build:netlify": "REACT_APP_ORGANISATION='© Web3 Foundation' REACT_APP_PRIVACY_URL=https://polkadot.network/privacy/ REACT_APP_DISABLE_FIAT=1 BUILD_PATH='./build/dashboard' react-scripts build",
+    "build:netlify": "REACT_APP_ORGANISATION='© PDEX Help' REACT_APP_PRIVACY_URL=https://polkadot.network/privacy/ REACT_APP_DISABLE_FIAT=1 BUILD_PATH='./build' react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "lint": "eslint ./src --fix"
+    "eject": "react-scripts eject"
   },
   "browserslist": {
     "production": [
@@ -101,5 +87,5 @@
       "last 1 safari version"
     ]
   },
-  "homepage": "/dashboard/"
+  "homepage": "/"
 }
