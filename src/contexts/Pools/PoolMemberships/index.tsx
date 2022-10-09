@@ -13,7 +13,6 @@ import { rmCommas, setStateWithRef } from 'Utils';
 import * as defaults from './defaults';
 import { useApi } from '../../Api';
 import { useConnect } from '../../Connect';
-import { usePoolsConfig } from '../PoolsConfig';
 
 export const PoolMembershipsContext =
   React.createContext<PoolMembershipsContextState>(
@@ -31,8 +30,6 @@ export const PoolMembershipsProvider = ({
   const { api, network, isReady } = useApi();
   const { accounts: connectAccounts, activeAccount } = useConnect();
 
-  const { enabled } = usePoolsConfig();
-
   // stores pool membership
   const [poolMemberships, setPoolMemberships] = useState<Array<PoolMembership>>(
     []
@@ -40,20 +37,20 @@ export const PoolMembershipsProvider = ({
   const poolMembershipsRef = useRef(poolMemberships);
 
   // stores pool subscription objects
-  const [poolMembershipUnsubs, setpoolMembershipUnsubs] = useState<Array<Fn>>(
+  const [poolMembershipUnsubs, setPoolMembershipUnsubs] = useState<Array<Fn>>(
     []
   );
   const poolMembershipUnsubRefs = useRef<Array<AnyApi>>(poolMembershipUnsubs);
 
   useEffect(() => {
-    if (isReady && enabled) {
-      (async () => {
+    if (isReady) {
+      (() => {
         setStateWithRef([], setPoolMemberships, poolMembershipsRef);
-        await unsubscribeAll();
+        unsubscribeAll();
         getPoolMemberships();
       })();
     }
-  }, [network, isReady, connectAccounts, enabled]);
+  }, [network, isReady, connectAccounts]);
 
   // subscribe to account pool memberships
   const getPoolMemberships = async () => {
@@ -72,10 +69,8 @@ export const PoolMembershipsProvider = ({
   }, []);
 
   // unsubscribe from all pool memberships
-  const unsubscribeAll = async () => {
-    Object.values(poolMembershipUnsubRefs.current).forEach(async (v: Fn) => {
-      await v();
-    });
+  const unsubscribeAll = () => {
+    Object.values(poolMembershipUnsubRefs.current).forEach((v: Fn) => v());
   };
 
   // subscribe to an account's pool membership
@@ -135,7 +130,7 @@ export const PoolMembershipsProvider = ({
     );
 
     const _unsubs = poolMembershipUnsubRefs.current.concat(unsub);
-    setStateWithRef(_unsubs, setpoolMembershipUnsubs, poolMembershipUnsubRefs);
+    setStateWithRef(_unsubs, setPoolMembershipUnsubs, poolMembershipUnsubRefs);
     return unsub;
   };
 

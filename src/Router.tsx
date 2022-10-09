@@ -1,7 +1,7 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import {
   Routes,
   Route,
@@ -12,7 +12,6 @@ import {
 import { AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet';
 import { Menu } from 'library/Menu';
-import { Palette } from 'library/Palette';
 import {
   PageWrapper,
   SideInterfaceWrapper,
@@ -24,30 +23,42 @@ import { NetworkBar } from 'library/NetworkBar';
 import { Modal } from 'modals';
 import { Headers } from 'library/Headers';
 import SideMenu from 'library/SideMenu';
-import Assistant from 'library/Assistant';
+import { Help } from 'library/Help';
 import Notifications from 'library/Notifications';
 import { TITLE_DEFAULT } from 'consts';
 import { useUi } from 'contexts/UI';
 import { useApi } from 'contexts/Api';
 import { Tooltip } from 'library/Tooltip';
+import { ErrorBoundary } from 'react-error-boundary';
+import { ErrorFallbackRoutes, ErrorFallbackApp } from 'library/ErrorBoundary';
 
 export const RouterInner = () => {
   const { network } = useApi();
   const { pathname } = useLocation();
-  const { sideMenuOpen, sideMenuMinimised } = useUi();
+  const { sideMenuOpen, sideMenuMinimised, setContainerRefs } = useUi();
 
   // scroll to top of the window on every page change or network change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [pathname, network]);
 
+  // set references to UI context and make available throughout app
+  useEffect(() => {
+    setContainerRefs({
+      mainInterface: mainInterfaceRef,
+    });
+  }, []);
+
+  // references to outer containers
+  const mainInterfaceRef = useRef<HTMLDivElement>(null);
+
   return (
-    <>
+    <ErrorBoundary FallbackComponent={ErrorFallbackApp}>
       {/* Modal: closed by default */}
       <Modal />
       <BodyInterfaceWrapper>
-        {/* Assistant: closed by default */}
-        <Assistant />
+        {/* Help: closed by default */}
+        <Help />
 
         {/* Tooltip: invisible by default */}
         <Tooltip />
@@ -55,52 +66,51 @@ export const RouterInner = () => {
         {/* Menu: closed by default */}
         <Menu />
 
-        {/* Palette: closed by default */}
-        <Palette />
-
         {/* Left side menu */}
         <SideInterfaceWrapper open={sideMenuOpen} minimised={sideMenuMinimised}>
           <SideMenu />
         </SideInterfaceWrapper>
 
         {/* Main content window */}
-        <MainInterfaceWrapper>
+        <MainInterfaceWrapper ref={mainInterfaceRef}>
           {/* Fixed headers */}
           <Headers />
 
-          <AnimatePresence>
-            <Routes>
-              {PAGES_CONFIG.map((page, pageIndex) => {
-                const { Entry } = page;
+          <ErrorBoundary FallbackComponent={ErrorFallbackRoutes}>
+            <AnimatePresence>
+              <Routes>
+                {PAGES_CONFIG.map((page, pageIndex) => {
+                  const { Entry } = page;
 
-                return (
-                  <Route
-                    key={`main_interface_page_${pageIndex}`}
-                    path={page.hash}
-                    element={
-                      <PageWrapper
-                        key={`main_interface_key__${pageIndex}`}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 10 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <Helmet>
-                          <title>{`${page.title} : ${TITLE_DEFAULT}`}</title>
-                        </Helmet>
-                        <Entry page={page} />
-                      </PageWrapper>
-                    }
-                  />
-                );
-              })}
-              <Route
-                key="main_interface_navigate"
-                path="*"
-                element={<Navigate to="/overview" />}
-              />
-            </Routes>
-          </AnimatePresence>
+                  return (
+                    <Route
+                      key={`main_interface_page_${pageIndex}`}
+                      path={page.hash}
+                      element={
+                        <PageWrapper
+                          key={`main_interface_key__${pageIndex}`}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 10 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <Helmet>
+                            <title>{`${page.title} : ${TITLE_DEFAULT}`}</title>
+                          </Helmet>
+                          <Entry page={page} />
+                        </PageWrapper>
+                      }
+                    />
+                  );
+                })}
+                <Route
+                  key="main_interface_navigate"
+                  path="*"
+                  element={<Navigate to="/overview" />}
+                />
+              </Routes>
+            </AnimatePresence>
+          </ErrorBoundary>
         </MainInterfaceWrapper>
       </BodyInterfaceWrapper>
 
@@ -109,7 +119,7 @@ export const RouterInner = () => {
 
       {/* Notification popups */}
       <Notifications />
-    </>
+    </ErrorBoundary>
   );
 };
 

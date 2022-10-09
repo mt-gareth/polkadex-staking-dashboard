@@ -9,6 +9,10 @@ import {
   textInvert,
   backgroundSecondary,
   tooltipBackground,
+  cardShadow,
+  shadowColor,
+  borderPrimary,
+  cardBorder,
 } from 'theme';
 
 export const Wrapper = styled.div`
@@ -40,24 +44,26 @@ export const StatBoxWrapper = styled(motion.div)`
   }
 
   /* responsive screen sizing */
-  h2 {
+  h3 {
     font-size: 1.2rem;
   }
 
   @media (min-width: 950px) {
     max-width: 300px;
-    h2 {
-      font-size: 1.35rem;
+    h3 {
+      font-size: 1.25rem;
     }
   }
 
   .content {
+    border: ${cardBorder} ${borderPrimary};
+    box-shadow: ${cardShadow} ${shadowColor};
     background: ${backgroundSecondary};
     display: flex;
-    border-radius: 0.75rem;
+    border-radius: 0.95rem;
     margin-right: 1.25rem;
-    padding: 1rem 0;
-    max-height: 3.4rem;
+    padding: 0.9rem 0;
+    max-height: 3.5rem;
     flex-flow: row wrap;
 
     @media (max-width: 749px) {
@@ -65,7 +71,7 @@ export const StatBoxWrapper = styled(motion.div)`
       padding: 0.9rem 0;
     }
 
-    h2,
+    h3,
     h4 {
       margin: 0;
     }
@@ -76,7 +82,7 @@ export const StatBoxWrapper = styled(motion.div)`
       flex-flow: row wrap;
       align-items: center;
 
-      .assistant-icon {
+      .help-icon {
         margin-left: 0.6rem;
       }
     }
@@ -131,18 +137,22 @@ export const StatBoxWrapper = styled(motion.div)`
       justify-content: center;
       overflow: hidden;
 
-      h2 {
+      h3 {
         display: flex;
         flex-flow: row wrap;
         justify-content: flex-start;
         align-items: flex-start;
-        margin-bottom: 0.4rem;
+        margin-bottom: 0.3rem;
+
+        &.text {
+          margin-top: 0.15rem;
+        }
 
         span.total {
           color: ${textSecondary};
-          font-size: 0.88rem;
-          margin-left: 0.3rem;
-          margin-top: 0.2rem;
+          font-size: 0.9rem;
+          margin-left: 0.4rem;
+          margin-top: 0rem;
         }
       }
     }

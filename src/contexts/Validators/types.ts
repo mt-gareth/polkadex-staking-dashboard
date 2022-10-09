@@ -12,12 +12,15 @@ export interface ValidatorsContextInterface {
   addFavourite: (a: string) => void;
   removeFavourite: (a: string) => void;
   validators: Array<Validator>;
+  avgCommission: number;
   meta: AnyMetaBatch;
   session: SessionValidators;
+  sessionParachain: string[];
   favourites: string[];
   nominated: Array<Validator> | null;
   poolNominated: Array<Validator> | null;
   favouritesList: Array<Validator> | null;
+  validatorCommunity: Array<any>;
 }
 
 export type ValidatorAddresses = Array<{
@@ -25,6 +28,11 @@ export type ValidatorAddresses = Array<{
 }>;
 
 export interface SessionValidators {
+  list: string[];
+  unsub: { (): void } | null;
+}
+
+export interface SessionParachainValidators {
   list: string[];
   unsub: { (): void } | null;
 }

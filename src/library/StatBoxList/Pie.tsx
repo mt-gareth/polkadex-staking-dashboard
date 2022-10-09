@@ -2,16 +2,14 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import NumberEasing from 'che-react-number-easing';
-import { OpenAssistantIcon } from 'library/OpenAssistantIcon';
+import { OpenHelpIcon } from 'library/OpenHelpIcon';
 import { StatPie } from 'library/Graphs/StatBoxPie';
 import { StatBox } from './Item';
 import { PieProps } from './types';
 
 export const Pie = (props: PieProps) => {
-  const { label, stat, graph, tooltip, assistant } = props;
-  const assist = assistant !== undefined;
-  const page = assistant?.page ?? '';
-  const key = assistant?.key ?? '';
+  const { label, stat, graph, tooltip, helpKey } = props;
+  const help = helpKey !== undefined;
 
   const showValue = stat?.value !== 0 || stat?.total === 0;
   const showTotal = !!stat?.total;
@@ -29,7 +27,7 @@ export const Pie = (props: PieProps) => {
         </div>
 
         <div className="labels">
-          <h2>
+          <h3>
             {showValue ? (
               <>
                 <NumberEasing
@@ -70,10 +68,9 @@ export const Pie = (props: PieProps) => {
             ) : (
               <>0</>
             )}
-          </h2>
+          </h3>
           <h4>
-            {label}
-            {assist && <OpenAssistantIcon page={page} title={key} />}
+            {label} {help && <OpenHelpIcon helpKey={helpKey} />}
           </h4>
         </div>
       </div>

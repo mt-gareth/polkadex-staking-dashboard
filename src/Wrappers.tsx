@@ -8,8 +8,7 @@ import {
   SIDE_MENU_MINIMISED_WIDTH,
   INTERFACE_MAXIMUM_WIDTH,
   SIDE_MENU_STICKY_THRESHOLD,
-  SHOW_SIDE_BAR_WIDTH_THRESHOLD,
-  SECTION_FULL_WIDTH_THRESHOLD,
+  SHOW_ACCOUNTS_BUTTON_WIDTH_THRESHOLD,
 } from 'consts';
 import {
   textPrimary,
@@ -19,6 +18,12 @@ import {
   textSecondary,
   buttonSecondaryBackground,
 } from 'theme';
+import {
+  InterfaceLayoutProps,
+  PageRowWrapperProps,
+  PageTitleWrapperProps,
+  SideInterfaceWrapperProps,
+} from 'types/styles';
 
 /* EntryWrapper
  *
@@ -62,6 +67,10 @@ export const EntryWrapper = styled.div`
     fill: ${textPrimary};
   }
 
+  ellipse.primary {
+    fill: ${textPrimary};
+  }
+
   input {
     border: none;
     border-bottom: 1px solid #ddd;
@@ -72,7 +81,7 @@ export const EntryWrapper = styled.div`
   }
 
   input::placeholder {
-    color: #bbb;
+    color: #aaa;
   }
 
   input:focus,
@@ -85,7 +94,7 @@ export const EntryWrapper = styled.div`
     padding-left: 1.25rem;
     padding-right: 1.25rem;
 
-    @media (min-width: ${SHOW_SIDE_BAR_WIDTH_THRESHOLD + 1}px) {
+    @media (min-width: ${SHOW_ACCOUNTS_BUTTON_WIDTH_THRESHOLD + 1}px) {
       padding-left: 1.75rem;
       padding-right: 1.75rem;
     }
@@ -93,7 +102,7 @@ export const EntryWrapper = styled.div`
       padding: 0 3rem 0 1rem;
     }
     @media (min-width: 1500px) {
-      padding: 0 5rem 0 1.5rem;
+      padding: 0 5rem 0 1rem;
     }
   }
 `;
@@ -117,7 +126,7 @@ export const BodyInterfaceWrapper = styled.div`
  * on smaller screens.
  * Used once in Router.
  */
-export const SideInterfaceWrapper = styled.div<any>`
+export const SideInterfaceWrapper = styled.div<SideInterfaceWrapperProps>`
   box-sizing: border-box;
   height: 100vh;
   display: flex;
@@ -179,13 +188,14 @@ export const PageWrapper = styled(motion.div)`
  * and position relative to top of screen when the element
  * is stuck.
  */
-export const PageTitleWrapper = styled.header<any>`
+export const PageTitleWrapper = styled.header<PageTitleWrapperProps>`
   box-sizing: border-box;
   background: ${backgroundPrimary};
   position: sticky;
   top: 0px;
-  padding-top: 1.5rem;
-  margin-bottom: 0.5rem;
+  padding-top: ${(props) => (props.sticky ? '1.5rem' : '0.5rem')};
+  margin-bottom: 0.25rem;
+  padding-bottom: ${(props) => (props.sticky ? '0.25rem' : 0)};
 
   @media (max-width: ${SIDE_MENU_STICKY_THRESHOLD}px) {
     top: 4rem;
@@ -199,7 +209,8 @@ export const PageTitleWrapper = styled.header<any>`
   transition: padding 0.3s ease-out;
 
   h1 {
-    font-size: ${(props) => (props.sticky ? '1.4rem ' : '1.8rem')};
+    font-family: 'Unbounded', 'sans-serif', sans-serif;
+    font-size: ${(props) => (props.sticky ? '1.4rem ' : '1.75rem')};
     @media (max-width: ${SIDE_MENU_STICKY_THRESHOLD}px) {
       font-size: 1.5rem;
     }
@@ -208,12 +219,21 @@ export const PageTitleWrapper = styled.header<any>`
 
   > .tabs {
     box-sizing: border-box;
-    overflow: auto;
+    overflow: hidden;
     max-width: ${INTERFACE_MAXIMUM_WIDTH}px;
     margin-top: ${(props) => (props.sticky ? '0' : '0.75rem')};
     transition: margin 0.2s;
+    height: 3.5rem;
 
-    > .inner {
+    > .scroll {
+      box-sizing: border-box;
+      width: 100%;
+      height: 4.5rem;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .inner {
       display: flex;
       flex-flow: row nowrap;
       border-bottom: ${(props) => (props.sticky ? '0px' : '1px solid')};
@@ -231,11 +251,9 @@ export const PageTitleWrapper = styled.header<any>`
         &.active {
           background: ${buttonSecondaryBackground};
         }
-
         &:last-child {
           margin-right: 0;
         }
-
         &:hover {
           opacity: 0.8;
         }
@@ -269,7 +287,7 @@ export const MenuPaddingWrapper = styled.div`
  * Used to separate page content based on rows.
  * Commonly used with RowPrimaryWrapper and RowSecondaryWrapper.
  */
-export const PageRowWrapper = styled.div<any>`
+export const PageRowWrapper = styled.div<PageRowWrapperProps>`
   box-sizing: border-box;
   margin-top: ${(props) => (props.noVerticalSpacer === true ? '0' : '1rem')};
   margin-bottom: ${(props) => (props.noVerticalSpacer === true ? '0' : '1rem')};
@@ -293,25 +311,27 @@ export const PageRowWrapper = styled.div<any>`
  *
  * The primary module in a PageRow.
  */
-export const RowPrimaryWrapper = styled.div<any>`
+export const RowPrimaryWrapper = styled.div<InterfaceLayoutProps>`
   order: ${(props) => props.vOrder};
   box-sizing: border-box;
   flex: 1;
   flex-basis: 100%;
   max-width: 100%;
 
-  @media (min-width: ${SIDE_MENU_STICKY_THRESHOLD + 1}px) {
-    ${(props) => props.hOrder === 0 && ' padding-right: 0.5rem;'}
-    ${(props) => props.hOrder === 1 && 'padding-left: 0.5rem;'}
+  @media (min-width: ${(props) => props.thresholdStickyMenu + 1}px) {
+    ${(props) => props.hOrder === 0 && ' padding-right: 0.75rem;'}
+    ${(props) => props.hOrder === 1 && 'padding-left: 0.75rem;'}
     order: ${(props) => props.hOrder};
-    flex-basis: 50%;
-    width: 50%;
     flex: 1;
+    flex-basis: 56%;
+    width: 56%;
+    max-width: ${(props) => (props.maxWidth ? props.maxWidth : 'none')};
   }
 
-  @media (min-width: ${SECTION_FULL_WIDTH_THRESHOLD + 400}px) {
+  @media (min-width: ${(props) => props.thresholdFullWidth + 400}px) {
     flex-basis: 62%;
     width: 62%;
+    max-width: ${(props) => (props.maxWidth ? props.maxWidth : 'none')};
   }
 `;
 
@@ -319,25 +339,26 @@ export const RowPrimaryWrapper = styled.div<any>`
  *
  * The secondary module in a PageRow.
  */
-export const RowSecondaryWrapper = styled.div<any>`
+export const RowSecondaryWrapper = styled.div<InterfaceLayoutProps>`
   order: ${(props) => props.vOrder};
   box-sizing: border-box;
   flex-basis: 100%;
   width: 100%;
   border-radius: 1rem;
 
-  @media (min-width: ${SIDE_MENU_STICKY_THRESHOLD + 1}px) {
-    ${(props) => props.hOrder === 1 && ' padding-left: 0.5rem;'}
-    ${(props) => props.hOrder === 0 && 'padding-right: 0.5rem;'}
+  @media (min-width: ${(props) => props.thresholdStickyMenu + 1}px) {
+    ${(props) => props.hOrder === 1 && ' padding-left: 0.75rem;'}
+    ${(props) => props.hOrder === 0 && 'padding-right: 0.75rem;'}
     order: ${(props) => props.hOrder};
-    flex-basis: 50%;
-    width: 50%;
     flex: 1;
+    flex-basis: 44%;
+    width: 44%;
+    max-width: ${(props) => (props.maxWidth ? props.maxWidth : 'none')};
   }
 
-  @media (min-width: ${SECTION_FULL_WIDTH_THRESHOLD + 400}px) {
+  @media (min-width: ${(props) => props.thresholdFullWidth + 400}px) {
     flex-basis: 38%;
-    max-width: 38%;
+    max-width: ${(props) => (props.maxWidth ? props.maxWidth : '38%')};
   }
 `;
 
@@ -350,4 +371,42 @@ export const Separator = styled.div`
   border-bottom: 1px solid ${borderPrimary};
   width: 100%;
   margin: 0.75rem 0;
+`;
+
+/* TopBarWrapper
+ *
+ * Positioned under titles for a Go Back button and other page header info.
+ */
+export const TopBarWrapper = styled.div`
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  border-bottom: 1px solid ${borderPrimary};
+  padding-bottom: 0.5rem;
+  width: 100%;
+  margin-top: 0.4rem;
+  margin-bottom: 0.25rem;
+
+  button {
+    padding: 0.75rem 1rem;
+    margin-right: 1rem;
+  }
+
+  h3 {
+    color: ${textSecondary};
+    font-size: 1.15rem;
+    margin: 0.25rem 0;
+    min-height: 2rem;
+  }
+
+  .right {
+    flex: 1 1 0%;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+
+    button {
+      margin: 0 0 0 1rem;
+    }
+  }
 `;

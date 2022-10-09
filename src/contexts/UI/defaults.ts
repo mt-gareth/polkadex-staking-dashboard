@@ -3,41 +3,52 @@
 
 import { UIContextInterface } from './types';
 
+export const defaultStakeSetup = {
+  controller: null,
+  payee: null,
+  nominations: [],
+  bond: 0,
+  section: 1,
+};
+
+export const defaultPoolSetup = {
+  metadata: '',
+  bond: 0,
+  nominations: [],
+  roles: null,
+  section: 1,
+};
+
 export const defaultUIContext: UIContextInterface = {
   // eslint-disable-next-line
   setSideMenu: (v) => {},
   // eslint-disable-next-line
   setUserSideMenuMinimised: (v) => {},
   // eslint-disable-next-line
-  orderValidators: (v) => {},
-  // eslint-disable-next-line
-  applyValidatorOrder: (l, o) => {},
-  // eslint-disable-next-line
-  applyValidatorFilters: (l, k, f) => {},
-  // eslint-disable-next-line
-  toggleFilterValidators: (v, l) => {},
-  // eslint-disable-next-line
-  toggleAllValidatorFilters: (t) => {},
-  resetValidatorFilters: () => {},
-  // eslint-disable-next-line
   toggleService: (k) => {},
   // eslint-disable-next-line
-  getSetupProgress: (a) => {},
+  getSetupProgress: (a, b) => {},
   // eslint-disable-next-line
-  getSetupProgressPercent: (a) => 0,
+  getStakeSetupProgressPercent: (a) => 0,
   // eslint-disable-next-line
-  setActiveAccountSetup: (p) => {},
+  getPoolSetupProgressPercent: (a) => 0,
   // eslint-disable-next-line
-  setActiveAccountSetupSection: (s) => {},
+  setActiveAccountSetup: (t, p) => {},
+  // eslint-disable-next-line
+  setActiveAccountSetupSection: (t, s) => {},
   getServices: () => [],
   // eslint-disable-next-line
-  setOnSetup: (v) => {},
+  setOnNominatorSetup: (v) => {},
+  // eslint-disable-next-line
+  setOnPoolSetup: (v) => {},
+  // eslint-disable-next-line
+  setContainerRefs: (v) => {},
   sideMenuOpen: 0,
   userSideMenuMinimised: 0,
   sideMenuMinimised: 0,
   services: [],
-  validatorFilters: ['over_subscribed', 'all_commission', 'blocked_nominations', 'missing_identity'],
-  validatorOrder: 'default',
-  onSetup: 0,
+  onNominatorSetup: 0,
+  onPoolSetup: 0,
   isSyncing: false,
+  containerRefs: {},
 };

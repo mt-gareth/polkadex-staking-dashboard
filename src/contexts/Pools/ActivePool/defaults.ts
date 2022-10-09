@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { BN } from 'bn.js';
-import { MaybeAccount } from 'types';
-import { ActiveBondedPool, ActivePoolContextState, PoolState } from '../types';
+import { Sync } from 'types';
+import { ActiveBondedPool, ActivePoolContextState } from '../types';
 
 export const nominationStatus = {};
 
@@ -14,18 +14,29 @@ export const poolRoles = {
   stateToggler: '',
 };
 
+export const bondedPool = {
+  points: '0',
+  state: 'Blocked',
+  memberCounter: '0',
+  roles: null,
+};
+
+export const rewardPool = {
+  lastRecordedRewardCounter: '0',
+  lastRecordedTotalPayouts: '0',
+  totalRewardsClaimed: '0',
+};
+
 export const activeBondedPool: ActiveBondedPool = {
   id: 0,
   addresses: {
     stash: '',
     reward: '',
   },
-  roles: poolRoles,
-  unclaimedReward: new BN(0),
-  memberCounter: '0',
-  points: '0',
-  state: PoolState.Open,
-  slashingSpansCount: 0,
+  bondedPool,
+  rewardPool,
+  rewardAccountBalance: {},
+  unclaimedRewards: new BN(0),
 };
 
 export const targets = {
@@ -37,29 +48,20 @@ export const poolNominations = {
   submittedIn: 0,
 };
 
-export const poolBondOptions = {
-  active: new BN(0),
-  freeToBond: new BN(0),
-  freeToUnbond: new BN(0),
-  totalUnlocking: new BN(0),
-  totalUnlocked: new BN(0),
-  totalPossibleBond: new BN(0),
-  totalUnlockChuncks: 0,
-};
-
 export const defaultActivePoolContext: ActivePoolContextState = {
   isBonding: () => false,
   isNominator: () => false,
   isOwner: () => false,
   isDepositor: () => false,
+  isStateToggler: () => false,
   getPoolBondedAccount: () => null,
-  // eslint-disable-next-line
-  getPoolBondOptions: (a: MaybeAccount) => null,
   getPoolUnlocking: () => [],
+  getPoolRoles: () => poolRoles,
   // eslint-disable-next-line
   setTargets: (t) => {},
   getNominationsStatus: () => nominationStatus,
   activeBondedPool,
   targets,
   poolNominations,
+  synced: Sync.Unsynced,
 };

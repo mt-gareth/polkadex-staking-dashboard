@@ -1,26 +1,22 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import {
-  faUserFriends,
-  faServer,
-  faChartLine,
-  faStar,
-  faUsers,
-  faThumbtack,
-  faComment,
-  faBraille,
-} from '@fortawesome/free-solid-svg-icons';
+import { faHashtag } from '@fortawesome/free-solid-svg-icons';
 import Overview from 'pages/Overview';
-import Stake from 'pages/Stake';
+import Nominate from 'pages/Nominate';
 import Pools from 'pages/Pools';
 import Browse from 'pages/Validators';
 import Favourites from 'pages/Favourites';
 import Payouts from 'pages/Payouts';
-import Projects from 'pages/explore/Projects';
-import Feedback from 'pages/explore/Feedback';
+import Community from 'pages/Community';
 import { URI_PREFIX } from 'consts';
 import { PageCategories, PagesConfig } from 'types';
+import * as analyticsJson from 'img/json/analytics-solid.json';
+import * as viewAgendaJson from 'img/json/view-agenda-solid.json';
+import * as view1SolidJson from 'img/json/view-1-solid.json';
+import * as viewGroupJson from 'img/json/groups-solid-edited.json';
+import * as viewTrendingUpJson from 'img/json/trending-up-solid.json';
+import * as favoriteHeartJson from 'img/json/favorite-heart-solid.json';
 
 export const PAGE_CATEGORIES: PageCategories = [
   {
@@ -29,7 +25,7 @@ export const PAGE_CATEGORIES: PageCategories = [
   },
   {
     _id: 2,
-    title: 'Staking',
+    title: 'Stake',
   },
   {
     _id: 3,
@@ -44,15 +40,15 @@ export const PAGES_CONFIG: PagesConfig = [
     uri: `${URI_PREFIX}/`,
     hash: '/overview',
     Entry: Overview,
-    icon: faBraille,
+    animate: view1SolidJson,
   },
   {
     category: 2,
-    title: 'Stake',
-    uri: `${URI_PREFIX}/stake`,
-    hash: '/stake',
-    Entry: Stake,
-    icon: faChartLine,
+    title: 'Solo',
+    uri: `${URI_PREFIX}/solo`,
+    hash: '/solo',
+    Entry: Nominate,
+    animate: viewTrendingUpJson,
   },
   {
     category: 2,
@@ -60,7 +56,7 @@ export const PAGES_CONFIG: PagesConfig = [
     uri: `${URI_PREFIX}/pools`,
     hash: '/pools',
     Entry: Pools,
-    icon: faUsers,
+    animate: viewGroupJson,
   },
   {
     category: 2,
@@ -68,7 +64,7 @@ export const PAGES_CONFIG: PagesConfig = [
     uri: `${URI_PREFIX}/payouts`,
     hash: '/payouts',
     Entry: Payouts,
-    icon: faStar,
+    animate: analyticsJson,
   },
   {
     category: 3,
@@ -76,7 +72,15 @@ export const PAGES_CONFIG: PagesConfig = [
     uri: `${URI_PREFIX}/validators`,
     hash: '/validators',
     Entry: Browse,
-    icon: faServer,
+    animate: viewAgendaJson,
+  },
+  {
+    category: 3,
+    title: 'Community',
+    uri: `${URI_PREFIX}/community`,
+    hash: '/community',
+    Entry: Community,
+    icon: faHashtag,
   },
   {
     category: 3,
@@ -84,7 +88,7 @@ export const PAGES_CONFIG: PagesConfig = [
     uri: `${URI_PREFIX}/favourites`,
     hash: '/favourites',
     Entry: Favourites,
-    icon: faThumbtack,
+    animate: favoriteHeartJson,
   },
 ];
 

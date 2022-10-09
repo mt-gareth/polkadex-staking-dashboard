@@ -8,17 +8,18 @@ import { useUi } from 'contexts/UI';
 import { useTheme } from 'contexts/Themes';
 import { defaultThemes, networkColors } from 'theme/default';
 import { useApi } from 'contexts/Api';
+import { WrapperProps } from './types';
 
-const Wrapper = styled.div<any>`
+const Wrapper = styled.div<WrapperProps>`
   position: absolute;
   right: 10px;
   top: 10px;
   font-size: 0.9rem;
-  font-variation-settings: 'wght' 570;
   border-radius: 0.3rem;
   padding: 0.25rem 0.4rem;
   color: ${(props) => props.color};
   opacity: ${(props) => props.opacity};
+  z-index: 2;
 `;
 
 export const SubscanButton = () => {

@@ -2,13 +2,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import styled from 'styled-components';
-import {
-  textSecondary,
-  borderPrimary,
-  buttonSecondaryBackground,
-  textPrimary,
-  networkColor,
-} from 'theme';
+import { textSecondary, borderPrimary, textPrimary, networkColor } from 'theme';
+import { ListProps, PaginationWrapperProps } from './types';
 
 export const Wrapper = styled.div`
   display: flex;
@@ -17,16 +12,16 @@ export const Wrapper = styled.div`
 `;
 
 export const Header = styled.div`
+  border-bottom: 1px solid ${borderPrimary};
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-end;
   padding: 0 0.25rem 0.5rem 0.25rem;
   flex: 1;
-  border-bottom: 1px solid ${borderPrimary};
 
   h4 {
-    margin: 0;
     color: ${textSecondary};
+    margin: 0;
   }
 
   > div {
@@ -44,11 +39,11 @@ export const Header = styled.div`
     flex: 1;
 
     button {
+      color: ${textSecondary};
       font-size: 1.1rem;
       margin-left: 0.4rem;
       opacity: 0.6;
       transition: all 0.2s;
-      color: ${textSecondary};
 
       &:hover {
         opacity: 0.9;
@@ -57,7 +52,7 @@ export const Header = styled.div`
   }
 `;
 
-export const Pagination = styled.div<any>`
+export const PaginationWrapper = styled.div<PaginationWrapperProps>`
   width: 100%;
   display: flex;
   align-items: center;
@@ -77,32 +72,41 @@ export const Pagination = styled.div<any>`
     justify-content: flex-end;
 
     button {
+      font-size: 0.98rem;
       padding: 0 0.25rem;
       margin-left: 0.5rem;
       &.next {
         color: ${(props) => (props.next ? networkColor : textSecondary)};
         cursor: ${(props) => (props.next ? 'pointer' : 'default')};
+        opacity: ${(props) => (props.next ? 1 : 0.4)};
       }
       &.prev {
         color: ${(props) => (props.prev ? networkColor : textSecondary)};
         cursor: ${(props) => (props.prev ? 'pointer' : 'default')};
+        opacity: ${(props) => (props.prev ? 1 : 0.4)};
       }
     }
   }
 `;
 
-export const Selectable = styled.div<any>`
+export const SelectableWrapper = styled.div`
   width: 100%;
   display: flex;
   align-items: center;
-  padding: 0.5rem;
+  padding: 0.5rem 0 0 0;
 
   > button {
+    border: 1px solid ${borderPrimary};
+    font-size: 1rem;
     color: ${textSecondary};
-    background: ${buttonSecondaryBackground};
-    border-radius: 0.5rem;
-    padding: 0.36rem 0.8rem;
+    border-radius: 1rem;
+    padding: 0.45rem 1rem;
     margin-right: 0.5rem;
+    margin-bottom: 0.75rem;
+
+    > svg {
+      margin-right: 0.5rem;
+    }
 
     &:disabled {
       opacity: 0.5;
@@ -114,11 +118,25 @@ export const Selectable = styled.div<any>`
   }
 `;
 
-export const List = styled.div<any>`
+export const List = styled.div<ListProps>`
   margin-top: 1rem;
   width: 100%;
 
-  .transition {
+  .search {
+    width: 100%;
+    margin: 0.25rem 0 0.75rem 0;
+    display: flex;
+    flex-flow: row wrap;
+
+    > input {
+      border: 1px solid ${borderPrimary};
+      border-radius: 1.75rem;
+      padding: 0.85rem 1.25rem;
+      font-size: 1.25rem;
+    }
+  }
+
+  > div {
     display: flex;
     flex-flow: row wrap;
     justify-content: flex-start;

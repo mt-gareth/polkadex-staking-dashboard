@@ -9,22 +9,24 @@ import { useApi } from 'contexts/Api';
 import { useConnect } from 'contexts/Connect';
 import { StakingContext } from 'contexts/Staking';
 import { useValidators } from 'contexts/Validators';
-import { useUi } from 'contexts/UI';
 import { useNetworkMetrics } from 'contexts/Network';
 import { LIST_ITEMS_PER_PAGE, LIST_ITEMS_PER_BATCH } from 'consts';
 import { Validator } from 'library/ValidatorList/Validator';
-import {
-  List,
-  Header,
-  Wrapper as ListWrapper,
-  Pagination,
-  Selectable,
-} from 'library/List';
+import { List, Header, Wrapper as ListWrapper } from 'library/List';
 import { useModal } from 'contexts/Modal';
 import { useTheme } from 'contexts/Themes';
 import { networkColors } from 'theme/default';
+import {
+  useValidatorFilter,
+  ValidatorFilterProvider,
+} from 'library/Filter/context';
+import { useUi } from 'contexts/UI';
+import { Pagination } from 'library/List/Pagination';
+import { MotionContainer } from 'library/List/MotionContainer';
+import { Selectable } from 'library/List/Selectable';
+import { SearchInput } from 'library/List/SearchInput';
 import { Filters } from './Filters';
-import { useValidatorList, ValidatorListProvider } from './context';
+import { useList, ListProvider } from '../List/context';
 
 export const ValidatorListInner = (props: any) => {
   const { mode } = useTheme();
@@ -32,25 +34,24 @@ export const ValidatorListInner = (props: any) => {
   const { activeAccount } = useConnect();
   const { metrics } = useNetworkMetrics();
   const { fetchValidatorMetaBatch } = useValidators();
-  const provider = useValidatorList();
+  const provider = useList();
   const modal = useModal();
 
-  const {
-    selectActive,
-    setSelectActive,
-    selected,
-    listFormat,
-    setListFormat,
-    selectToggleable,
-  } = provider;
+  // determine the nominator of the validator list.
+  // By default this will be the activeAccount. But for pools,
+  // the pool stash address should be the nominator.
+  const nominator = props.nominator ?? activeAccount;
 
+  const { selected, listFormat, setListFormat } = provider;
+
+  const { isSyncing } = useUi();
   const {
     validatorFilters,
     validatorOrder,
     applyValidatorFilters,
     applyValidatorOrder,
-    isSyncing,
-  } = useUi();
+    validatorSearchFilter,
+  } = useValidatorFilter();
 
   const {
     batchKey,
@@ -67,8 +68,10 @@ export const ValidatorListInner = (props: any) => {
   const actions = props.actions ?? [];
   const showMenu = props.showMenu ?? true;
   const inModal = props.inModal ?? false;
+  const allowSearch = props.allowSearch ?? false;
+  const allowListFormat = props.allowListFormat ?? true;
 
-  const actionsAll = [...actions].filter((action: any) => !action.onSelected);
+  const actionsAll = [...actions].filter((action) => !action.onSelected);
   const actionsSelected = [...actions].filter(
     (action: any) => action.onSelected
   );
@@ -78,7 +81,7 @@ export const ValidatorListInner = (props: any) => {
     props.refetchOnListUpdate !== undefined ? props.refetchOnListUpdate : false;
 
   // current page
-  const [page, setPage]: any = useState(1);
+  const [page, setPage] = useState<number>(1);
 
   // current render iteration
   const [renderIteration, _setRenderIteration] = useState<number>(1);
@@ -92,6 +95,9 @@ export const ValidatorListInner = (props: any) => {
   // is this the initial fetch
   const [fetched, setFetched] = useState(false);
 
+  // store whether the search bar is being used
+  const [isSearching, setIsSearching] = useState(false);
+
   // render throttle iteration
   const renderIterationRef = useRef(renderIteration);
   const setRenderIteration = (iter: number) => {
@@ -101,8 +107,6 @@ export const ValidatorListInner = (props: any) => {
 
   // pagination
   const totalPages = Math.ceil(validators.length / LIST_ITEMS_PER_PAGE);
-  const nextPage = page + 1 > totalPages ? totalPages : page + 1;
-  const prevPage = page - 1 < 1 ? 1 : page - 1;
   const pageEnd = page * LIST_ITEMS_PER_PAGE - 1;
   const pageStart = pageEnd - (LIST_ITEMS_PER_PAGE - 1);
 
@@ -111,10 +115,13 @@ export const ValidatorListInner = (props: any) => {
 
   // reset list when validator list changes
   useEffect(() => {
-    if (props.validators !== validatorsDefault) {
+    const validatorsEqual =
+      JSON.stringify(props.validators) === JSON.stringify(validatorsDefault);
+
+    if (!validatorsEqual) {
       setFetched(false);
     }
-  }, [props.validators, activeAccount]);
+  }, [props.validators, nominator]);
 
   // configure validator list when network is ready to fetch
   useEffect(() => {
@@ -132,6 +139,7 @@ export const ValidatorListInner = (props: any) => {
     }
   }, [renderIterationRef.current]);
 
+  // trigger onSelected when selection changes
   useEffect(() => {
     if (props.onSelected) {
       props.onSelected(provider);
@@ -159,9 +167,10 @@ export const ValidatorListInner = (props: any) => {
   };
 
   // handle filter / order update
-  const handleValidatorsFilterUpdate = () => {
+  const handleValidatorsFilterUpdate = (
+    filteredValidators: any = Object.assign(validatorsDefault)
+  ) => {
     if (allowFilters) {
-      let filteredValidators = Object.assign(validatorsDefault);
       if (validatorOrder !== 'default') {
         filteredValidators = applyValidatorOrder(
           filteredValidators,
@@ -191,9 +200,27 @@ export const ValidatorListInner = (props: any) => {
     modal.setResize();
   };
 
-  if (!validators.length) {
-    return <></>;
-  }
+  const handleSearchChange = (e: React.FormEvent<HTMLInputElement>) => {
+    const newValue = e.currentTarget.value;
+    // update validator list
+    let filteredValidators = Object.assign(validatorsDefault);
+    filteredValidators = validatorSearchFilter(
+      filteredValidators,
+      batchKey,
+      newValue
+    );
+
+    // ensure no duplicates
+    filteredValidators = filteredValidators.filter(
+      (value: any, index: any, self: any) =>
+        index === self.findIndex((t: any) => t.address === value.address)
+    );
+
+    handleValidatorsFilterUpdate(filteredValidators);
+    setPage(1);
+    setIsSearching(e.currentTarget.value !== '');
+    setRenderIteration(1);
+  };
 
   return (
     <ListWrapper>
@@ -207,147 +234,99 @@ export const ValidatorListInner = (props: any) => {
           </h4>
         </div>
         <div>
-          <button type="button" onClick={() => setListFormat('row')}>
-            <FontAwesomeIcon
-              icon={faBars}
-              color={
-                listFormat === 'row'
-                  ? networkColors[`${network.name}-${mode}`]
-                  : 'inherit'
-              }
-            />
-          </button>
-          <button type="button" onClick={() => setListFormat('col')}>
-            <FontAwesomeIcon
-              icon={faGripVertical}
-              color={
-                listFormat === 'col'
-                  ? networkColors[`${network.name}-${mode}`]
-                  : 'inherit'
-              }
-            />
-          </button>
+          {allowListFormat === true && (
+            <>
+              <button type="button" onClick={() => setListFormat('row')}>
+                <FontAwesomeIcon
+                  icon={faBars}
+                  color={
+                    listFormat === 'row'
+                      ? networkColors[`${network.name}-${mode}`]
+                      : 'inherit'
+                  }
+                />
+              </button>
+              <button type="button" onClick={() => setListFormat('col')}>
+                <FontAwesomeIcon
+                  icon={faGripVertical}
+                  color={
+                    listFormat === 'col'
+                      ? networkColors[`${network.name}-${mode}`]
+                      : 'inherit'
+                  }
+                />
+              </button>
+            </>
+          )}
         </div>
       </Header>
       <List flexBasisLarge={allowMoreCols ? '33.33%' : '50%'}>
+        {allowSearch && (
+          <SearchInput
+            handleChange={handleSearchChange}
+            placeholder="Search Address or Identity"
+          />
+        )}
+
         {allowFilters && <Filters />}
 
-        {pagination && (
-          <Pagination prev={page !== 1} next={page !== totalPages}>
-            <div>
-              <h4>
-                Page {page} of {totalPages}
-              </h4>
-            </div>
-            <div>
-              <button
-                type="button"
-                className="prev"
-                onClick={() => {
-                  setPage(prevPage);
-                }}
-              >
-                Prev
-              </button>
-              <button
-                type="button"
-                className="next"
-                onClick={() => {
-                  setPage(nextPage);
-                }}
-              >
-                Next
-              </button>
-            </div>
-          </Pagination>
+        {listValidators.length > 0 && pagination && (
+          <Pagination page={page} total={totalPages} setter={setPage} />
         )}
 
         {selectable && (
-          <Selectable>
-            {actionsAll.map((a: any, i: number) => (
-              <button
-                key={`a_all_${i}`}
-                disabled={a.disabled ?? false}
-                type="button"
-                onClick={() => a.onClick(provider)}
-              >
-                {a.title}
-              </button>
-            ))}
-            {selectToggleable === true && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectActive(!selectActive);
-                }}
-              >
-                {selectActive ? 'Cancel Selection' : 'Select'}
-              </button>
-            )}
-
-            {selected.length > 0 && (
-              <>
-                {actionsSelected.map((a: any, i: number) => (
-                  <button
-                    key={`a_selected_${i}`}
-                    disabled={a.disabled ?? false}
-                    type="button"
-                    onClick={() => a.onClick(provider)}
-                  >
-                    {a.title}
-                  </button>
-                ))}
-              </>
-            )}
-          </Selectable>
+          <Selectable
+            canSelect={listValidators.length > 0}
+            actionsAll={actionsAll}
+            actionsSelected={actionsSelected}
+          />
         )}
 
-        <motion.div
-          className="transition"
-          initial="hidden"
-          animate="show"
-          variants={{
-            hidden: { opacity: 0 },
-            show: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.01,
-              },
-            },
-          }}
-        >
-          {listValidators.map((validator: any, index: number) => {
-            // fetch batch data by referring to default list index.
-            const batchIndex = validatorsDefault.indexOf(validator);
+        <MotionContainer>
+          {listValidators.length ? (
+            <>
+              {listValidators.map((validator: any, index: number) => {
+                // fetch batch data by referring to default list index.
+                const batchIndex = validatorsDefault.indexOf(validator);
 
-            return (
-              <motion.div
-                className={`item ${listFormat === 'row' ? 'row' : 'col'}`}
-                key={`nomination_${index}`}
-                variants={{
-                  hidden: {
-                    y: 15,
-                    opacity: 0,
-                  },
-                  show: {
-                    y: 0,
-                    opacity: 1,
-                  },
-                }}
-              >
-                <Validator
-                  validator={validator}
-                  toggleFavourites={toggleFavourites}
-                  batchIndex={batchIndex}
-                  batchKey={batchKey}
-                  format={format}
-                  showMenu={showMenu}
-                  bondType={bondType}
-                />
-              </motion.div>
-            );
-          })}
-        </motion.div>
+                return (
+                  <motion.div
+                    className={`item ${listFormat === 'row' ? 'row' : 'col'}`}
+                    key={`nomination_${index}`}
+                    variants={{
+                      hidden: {
+                        y: 15,
+                        opacity: 0,
+                      },
+                      show: {
+                        y: 0,
+                        opacity: 1,
+                      },
+                    }}
+                  >
+                    <Validator
+                      validator={validator}
+                      nominator={nominator}
+                      toggleFavourites={toggleFavourites}
+                      batchIndex={batchIndex}
+                      batchKey={batchKey}
+                      format={format}
+                      showMenu={showMenu}
+                      bondType={bondType}
+                      inModal={inModal}
+                    />
+                  </motion.div>
+                );
+              })}
+            </>
+          ) : (
+            <h4 style={{ marginTop: '1rem' }}>
+              {isSearching
+                ? 'No validators match this criteria.'
+                : 'No validators.'}
+            </h4>
+          )}
+        </MotionContainer>
       </List>
     </ListWrapper>
   );
@@ -356,19 +335,21 @@ export const ValidatorListInner = (props: any) => {
 export const ValidatorList = (props: any) => {
   const { selectActive, selectToggleable } = props;
   return (
-    <ValidatorListProvider
+    <ListProvider
       selectActive={selectActive}
       selectToggleable={selectToggleable}
     >
-      <ValidatorListShouldUpdate {...props} />
-    </ValidatorListProvider>
+      <ValidatorFilterProvider>
+        <ValidatorListShouldUpdate {...props} />
+      </ValidatorFilterProvider>
+    </ListProvider>
   );
 };
 
 export class ValidatorListShouldUpdate extends React.Component<any, any> {
   static contextType = StakingContext;
 
-  shouldComponentUpdate(nextProps: any, nextState: any) {
+  shouldComponentUpdate(nextProps: any) {
     return this.props.validators !== nextProps.validators;
   }
 

@@ -58,9 +58,9 @@ export const StyledSelect = styled.div`
   box-sizing: border-box;
   margin: 0.75rem 0 0;
   width: 100%;
-  border-radius: 0.75rem;
+  border-radius: 1rem;
   z-index: 1;
-  height: 148px;
+  height: 170px;
   padding: 0.25rem;
   overflow: auto;
   display: flex;
@@ -70,9 +70,11 @@ export const StyledSelect = styled.div`
 
   .wrapper {
     position: relative;
-    width: 240px;
-    height: 130px;
-    margin: 0.25rem;
+    min-width: 240px;
+    height: 125px;
+    flex: 1 1 20%;
+    max-width: 20%;
+    padding: 0.35rem;
 
     .item {
       background: ${backgroundToggle};
@@ -82,7 +84,7 @@ export const StyledSelect = styled.div`
       height: 100%;
       padding: 0.65rem 1rem;
       cursor: pointer;
-      border-radius: 0.75rem;
+      border-radius: 1rem;
       display: flex;
       flex-flow: column wrap;
       justify-content: center;

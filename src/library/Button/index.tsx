@@ -12,10 +12,11 @@ import {
 } from 'theme';
 import { ButtonProps, ButtonWrapperProps } from './types';
 
-export const ButtonRow = styled.div`
+export const ButtonRow = styled.div<{ verticalSpacing?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: flex-start;
+  margin-top: ${(props) => (props.verticalSpacing ? '1rem' : 0)};
 `;
 
 export const Wrapper = styled(motion.div)<ButtonWrapperProps>`
@@ -38,9 +39,8 @@ export const Wrapper = styled(motion.div)<ButtonWrapperProps>`
         : textSecondary};
 
     padding: ${(props) => props.padding};
-    border-radius: 0.75rem;
+    border-radius: 1.25rem;
     font-size: ${(props) => props.fontSize};
-    font-variation-settings: 'wght' 560;
     transition: opacity 0.2s;
 
     .space {
@@ -73,8 +73,8 @@ export const Button = (props: ButtonProps) => {
       whileTap={{ scale: !disabled ? 0.98 : 1 }}
       type={type}
       margin={inline ? '0' : '0 0.5rem'}
-      padding={small ? '0.36rem 0.8rem' : '0.45rem 1.2rem'}
-      fontSize={small ? '0.95rem' : '1.05rem'}
+      padding={small ? '0.42rem 0.9rem' : '0.52rem 1.2rem'}
+      fontSize={small ? '1rem' : '1.15rem'}
     >
       <button
         type="button"

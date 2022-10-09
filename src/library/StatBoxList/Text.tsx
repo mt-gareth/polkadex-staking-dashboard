@@ -1,24 +1,23 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { OpenAssistantIcon } from 'library/OpenAssistantIcon';
+import { OpenHelpIcon } from 'library/OpenHelpIcon';
 import { StatBox } from './Item';
 import { TextProps } from './types';
 
 export const Text = (props: TextProps) => {
-  const { label, value, assistant } = props;
+  const { label, value, helpKey } = props;
 
-  const assist = assistant !== undefined;
-  const page = assistant?.page ?? '';
-  const key = assistant?.key ?? '';
+  const help = helpKey !== undefined;
+
   return (
     <StatBox>
       <div className="content chart">
         <div className="labels">
-          <h2>{value}</h2>
+          <h3 className="text">{value}</h3>
           <h4>
             {label}
-            {assist && <OpenAssistantIcon page={page} title={key} />}
+            {help && <OpenHelpIcon helpKey={helpKey} />}
           </h4>
         </div>
       </div>

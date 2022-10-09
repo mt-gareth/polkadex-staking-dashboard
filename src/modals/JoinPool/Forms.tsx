@@ -6,13 +6,18 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowAltCircleUp } from '@fortawesome/free-regular-svg-icons';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 import { useModal } from 'contexts/Modal';
-import { useBalances } from 'contexts/Balances';
 import { useApi } from 'contexts/Api';
 import { useConnect } from 'contexts/Connect';
-import { BondInputWithFeedback } from 'library/Form/BondInputWithFeedback';
+import { BondFeedback } from 'library/Form/Bond/BondFeedback';
 import { useSubmitExtrinsic } from 'library/Hooks/useSubmitExtrinsic';
-import { BondOptions } from 'contexts/Balances/types';
 import { planckBnToUnit, unitToPlanckBn } from 'Utils';
+import { usePoolMembers } from 'contexts/Pools/PoolMembers';
+import { useUi } from 'contexts/UI';
+import { defaultPoolSetup } from 'contexts/UI/defaults';
+import { SetupType } from 'contexts/UI/types';
+import { EstimatedTxFee } from 'library/EstimatedTxFee';
+import { useTxFees } from 'contexts/TxFees';
+import { useTransferOptions } from 'contexts/TransferOptions';
 import { ContentWrapper } from './Wrapper';
 import { FooterWrapper, NotesWrapper } from '../Wrappers';
 
@@ -22,12 +27,16 @@ export const Forms = () => {
   const { setStatus: setModalStatus, config, setResize } = useModal();
   const { id: poolId, setActiveTab } = config;
   const { activeAccount, accountHasSigner } = useConnect();
-
-  const { getBondOptions } = useBalances();
-  const { freeToBond }: BondOptions = getBondOptions(activeAccount);
+  const { queryPoolMember, addToPoolMembers } = usePoolMembers();
+  const { setActiveAccountSetup } = useUi();
+  const { txFeesValid } = useTxFees();
+  const { getTransferOptions } = useTransferOptions();
+  const { freeBalance } = getTransferOptions(activeAccount);
 
   // local bond value
-  const [bond, setBond] = useState({ bond: planckBnToUnit(freeToBond, units) });
+  const [bond, setBond] = useState({
+    bond: planckBnToUnit(freeBalance, units),
+  });
 
   // bond valid
   const [bondValid, setBondValid] = useState<boolean>(true);
@@ -51,7 +60,7 @@ export const Forms = () => {
     return _tx;
   };
 
-  const { submitTx, estimatedFee, submitting } = useSubmitExtrinsic({
+  const { submitTx, submitting } = useSubmitExtrinsic({
     tx: tx(),
     from: activeAccount,
     shouldSubmit: bondValid,
@@ -59,12 +68,15 @@ export const Forms = () => {
       setModalStatus(0);
       setActiveTab(0);
     },
-    callbackInBlock: () => {},
-  });
+    callbackInBlock: async () => {
+      // query and add account to poolMembers list
+      const member = await queryPoolMember(activeAccount);
+      addToPoolMembers(member);
 
-  const TxFee = (
-    <p>Estimated Tx Fee: {estimatedFee === null ? '...' : `${estimatedFee}`}</p>
-  );
+      // reset localStorage setup progress
+      setActiveAccountSetup(SetupType.Pool, defaultPoolSetup);
+    },
+  });
 
   const warnings = [];
   if (!accountHasSigner(activeAccount)) {
@@ -75,11 +87,10 @@ export const Forms = () => {
     <ContentWrapper>
       <div>
         <>
-          <BondInputWithFeedback
+          <BondFeedback
             bondType="pool"
-            unbond={false}
             listenIsValid={setBondValid}
-            defaultBond={planckBnToUnit(freeToBond, units)}
+            defaultBond={planckBnToUnit(freeBalance, units)}
             setters={[
               {
                 set: setBond,
@@ -88,7 +99,9 @@ export const Forms = () => {
             ]}
             warnings={warnings}
           />
-          <NotesWrapper>{TxFee}</NotesWrapper>
+          <NotesWrapper>
+            <EstimatedTxFee />
+          </NotesWrapper>
         </>
       </div>
       <FooterWrapper>
@@ -98,7 +111,10 @@ export const Forms = () => {
             className="submit"
             onClick={() => submitTx()}
             disabled={
-              submitting || !bondValid || !accountHasSigner(activeAccount)
+              submitting ||
+              !bondValid ||
+              !accountHasSigner(activeAccount) ||
+              !txFeesValid
             }
           >
             <FontAwesomeIcon

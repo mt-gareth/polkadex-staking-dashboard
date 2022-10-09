@@ -1,120 +1,187 @@
 // Copyright 2022 @paritytech/polkadot-staking-dashboard authors & contributors
 // SPDX-License-Identifier: Apache-2.0
 
-import { motion } from 'framer-motion';
+import { useEffect, useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {
-  faHashtag,
-  faPlusCircle,
-  faUsers,
-} from '@fortawesome/free-solid-svg-icons';
+import { faBars, faProjectDiagram } from '@fortawesome/free-solid-svg-icons';
+import { faCopy } from '@fortawesome/free-regular-svg-icons';
 import { useModal } from 'contexts/Modal';
 import { useActivePool } from 'contexts/Pools/ActivePool';
-import { clipAddress } from 'Utils';
-import Identicon from 'library/Identicon';
-import { u8aToString, u8aUnwrapBytes } from '@polkadot/util';
 import { useBondedPools } from 'contexts/Pools/BondedPools';
-import { usePoolsTabs } from 'pages/Pools/context';
+import { usePoolsTabs } from 'pages/Pools/Home/context';
 import { useConnect } from 'contexts/Connect';
-import _ from 'window-or-global';
-import { Wrapper } from './Wrapper';
+import {
+  Wrapper,
+  Labels,
+  Separator,
+  MenuPosition,
+} from 'library/ListItem/Wrappers';
+import { useMenu } from 'contexts/Menu';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
+import { NotificationText } from 'contexts/Notifications/types';
+import { useNotifications } from 'contexts/Notifications';
+import { useStaking } from 'contexts/Staking';
+import { useValidators } from 'contexts/Validators';
+import { FavouritePool } from 'library/ListItem/Labels/FavouritePool';
+import { useUi } from 'contexts/UI';
+import { PoolBonded } from 'library/ListItem/Labels/PoolBonded';
+import { PoolState } from 'contexts/Pools/types';
+import { PoolIdentity } from 'library/ListItem/Labels/PoolIdentity';
 import { PoolProps } from './types';
+import { Members } from '../ListItem/Labels/Members';
+import { JoinPool } from '../ListItem/Labels/JoinPool';
+import { PoolId } from '../ListItem/Labels/PoolId';
 
 export const Pool = (props: PoolProps) => {
   const { pool, batchKey, batchIndex } = props;
-  const { memberCounter, addresses, id } = pool;
+  const { memberCounter, addresses, id, state } = pool;
+
   const { openModalWith } = useModal();
   const { activeAccount, isReadOnlyAccount } = useConnect();
   const { meta } = useBondedPools();
   const { isBonding } = useActivePool();
+  const { addNotification } = useNotifications();
+  const { eraStakers, getNominationsStatusFromTargets } = useStaking();
+  const { validators } = useValidators();
+  const { isSyncing } = useUi();
+
   // assumes component is under `PoolsTabsProvider` (Pools page)
   const { setActiveTab } = usePoolsTabs();
+  const { setMenuPosition, setMenuItems, open }: any = useMenu();
 
-  const metadata = meta[batchKey]?.metadata ?? [];
+  // get metadata from pools metabatch
+  const nominations = meta[batchKey]?.nominations ?? [];
 
-  // aggregate synced status
-  const metadataSynced = metadata.length > 0 ?? false;
+  // get pool targets from nominations metadata
+  const targets = nominations[batchIndex]?.targets ?? [];
 
-  // display value
-  const defaultDisplay = clipAddress(addresses.stash);
+  // extract validator entries from pool targets
+  const targetValidators = validators.filter((v: any) =>
+    targets.includes(v.address)
+  );
 
-  // fallback to address on empty metadata string
-  let display = metadata[batchIndex] ?? defaultDisplay;
-  // check if super identity has been byte encoded
-  const displayAsBytes = u8aToString(u8aUnwrapBytes(display));
-  if (displayAsBytes !== '') {
-    display = displayAsBytes;
-  }
-  // if still empty string, default to clipped address
-  if (display === '') {
-    display = defaultDisplay;
-  }
+  const [nominationsStatus, setNominationsStatus] = useState<{
+    [key: string]: string;
+  } | null>(null);
+
+  // update pool nomination status as nominations metadata becomes available.
+  // we cannot add effect dependencies here as this needs to trigger
+  // as soon as the component displays. (upon tab change).
+  const handleNominationsStatus = () => {
+    const _nominationStatus = getNominationsStatusFromTargets(
+      addresses.stash,
+      targets
+    );
+    setNominationsStatus(_nominationStatus);
+  };
+
+  // recalculate nominations status as app syncs
+  useEffect(() => {
+    if (
+      nominationsStatus === null &&
+      eraStakers.stakers.length &&
+      nominations.length
+    ) {
+      handleNominationsStatus();
+    }
+  });
+
+  // metadata has changed, which means pool items may have been added.
+  // recalculate nominations status
+  useEffect(() => {
+    handleNominationsStatus();
+  }, [meta]);
+
+  // configure floating menu position
+  const posRef = useRef(null);
+
+  // copy address notification
+  const notificationCopyAddress: NotificationText | null =
+    addresses.stash == null
+      ? null
+      : {
+          title: 'Address Copied to Clipboard',
+          subtitle: addresses.stash,
+        };
+
+  // consruct pool menu items
+  const menuItems: Array<any> = [];
+
+  // add view pool nominations button to menu
+  menuItems.push({
+    icon: <FontAwesomeIcon icon={faProjectDiagram as IconProp} />,
+    wrap: null,
+    title: `View Pool Nominations`,
+    cb: () => {
+      openModalWith(
+        'PoolNominations',
+        {
+          nominator: addresses.stash,
+          targets: targetValidators,
+        },
+        'large'
+      );
+    },
+  });
+
+  // add copy pool address button to menu
+  menuItems.push({
+    icon: <FontAwesomeIcon icon={faCopy as IconProp} />,
+    wrap: null,
+    title: `Copy Pool Address`,
+    cb: () => {
+      navigator.clipboard.writeText(addresses.stash);
+      if (notificationCopyAddress) {
+        addNotification(notificationCopyAddress);
+      }
+    },
+  });
+
+  // toggle menu handler
+  const toggleMenu = () => {
+    if (!open) {
+      setMenuItems(menuItems);
+      setMenuPosition(posRef);
+    }
+  };
 
   return (
-    <Wrapper>
-      <div>
-        <Identicon value={addresses.stash} size={26} />
-        {!metadataSynced ? (
-          <motion.div
-            className="identity"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h4>{clipAddress(addresses.stash)}</h4>
-          </motion.div>
-        ) : (
-          <motion.div
-            className="identity"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h4>{display}</h4>
-          </motion.div>
-        )}
-
-        <div>
-          <div className="labels">
-            <div className="label stat">
-              <FontAwesomeIcon icon={faHashtag} />
-              &nbsp;{id}
-            </div>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.1 }}
-            >
-              <div className="label">
-                <FontAwesomeIcon icon={faUsers} className="icon" />
-                {memberCounter}
-              </div>
-            </motion.div>
-            {!isBonding() && (
-              <div className="label">
-                <button
-                  type="button"
-                  disabled={isReadOnlyAccount(activeAccount) || !activeAccount}
-                  onClick={() =>
-                    openModalWith(
-                      'JoinPool',
-                      {
-                        id,
-                        setActiveTab,
-                      },
-                      'small'
-                    )
-                  }
-                >
-                  <FontAwesomeIcon
-                    icon={faPlusCircle}
-                    transform="grow-4"
-                    className="join"
-                  />
-                </button>
-              </div>
-            )}
+    <Wrapper format="nomination">
+      <div className="inner">
+        <MenuPosition ref={posRef} />
+        <div className="row">
+          <PoolIdentity
+            batchKey={batchKey}
+            batchIndex={batchIndex}
+            pool={pool}
+          />
+          <div>
+            <Labels>
+              <FavouritePool address={addresses.stash} />
+              <PoolId id={id} />
+              <Members members={memberCounter} />
+              <button
+                type="button"
+                className="label"
+                onClick={() => toggleMenu()}
+              >
+                <FontAwesomeIcon icon={faBars} />
+              </button>
+            </Labels>
           </div>
+        </div>
+        <Separator />
+        <div className="row status">
+          <PoolBonded pool={pool} batchIndex={batchIndex} batchKey={batchKey} />
+          {!isSyncing &&
+            state === PoolState.Open &&
+            !isBonding() &&
+            !isReadOnlyAccount(activeAccount) &&
+            activeAccount && (
+              <Labels>
+                <JoinPool id={id} setActiveTab={setActiveTab} />
+              </Labels>
+            )}
         </div>
       </div>
     </Wrapper>

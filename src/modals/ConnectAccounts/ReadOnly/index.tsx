@@ -8,8 +8,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ExtensionWrapper } from '../Wrappers';
 import { Wrapper } from './Wrapper';
 import { ReadOnlyInput } from '../ReadOnlyInput';
+import { ReadOnlyProps } from '../types';
 
-export const ReadOnly = (props: any) => {
+export const ReadOnly = (props: ReadOnlyProps) => {
   const { setReadOnlyOpen, readOnlyOpen } = props;
 
   const { accounts, forgetAccounts } = useConnect();
@@ -73,17 +74,17 @@ export const ReadOnly = (props: any) => {
           )}
           <div className="accounts">
             {externalAccountsByUser.map((a: ExternalAccount, i: number) => (
-              <button
-                key={`user_external_account_${i}`}
-                type="button"
-                className="account"
-                onClick={() => {
-                  forgetAccount(a);
-                }}
-              >
+              <div key={`user_external_account_${i}`} className="account">
                 <div>{a.address}</div>
-                <div>Forget</div>
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    forgetAccount(a);
+                  }}
+                >
+                  Forget
+                </button>
+              </div>
             ))}
           </div>
         </div>

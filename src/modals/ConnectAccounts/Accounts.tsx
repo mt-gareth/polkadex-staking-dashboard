@@ -2,7 +2,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, useEffect, forwardRef } from 'react';
-import { faCog, faChartLine, faUsers } from '@fortawesome/free-solid-svg-icons';
+import {
+  faCog,
+  faProjectDiagram,
+  faUsers,
+} from '@fortawesome/free-solid-svg-icons';
 import { useConnect } from 'contexts/Connect';
 import Button from 'library/Button';
 import { useBalances } from 'contexts/Balances';
@@ -56,7 +60,7 @@ export const Accounts = forwardRef((props: any, ref: any) => {
 
   useEffect(() => {
     getStakingStatuses();
-  }, [localAccounts, balanceAccounts, ledgers]);
+  }, [localAccounts, balanceAccounts, ledgers, accounts, memberships]);
 
   const getStakingStatuses = () => {
     // accumulate imported stash accounts
@@ -64,8 +68,8 @@ export const Accounts = forwardRef((props: any, ref: any) => {
       const locks = getAccountLocks(account.address);
 
       // account is a stash if they have an active `staking` lock
-      const activeLocks = locks.find((l: any) => {
-        const { id }: any = l;
+      const activeLocks = locks.find((l) => {
+        const { id } = l;
         return id.trim() === 'staking';
       });
       if (activeLocks !== undefined) {
@@ -124,7 +128,7 @@ export const Accounts = forwardRef((props: any, ref: any) => {
       // if controller, get stash
       if (controller) {
         const applied =
-          _activeStaking.find((a: any) => a.controller === account.address) !==
+          _activeStaking.find((a) => a.controller === account.address) !==
           undefined;
 
         if (!applied) {
@@ -196,10 +200,10 @@ export const Accounts = forwardRef((props: any, ref: any) => {
         )}
         {activeStaking.length > 0 && (
           <>
-            <h2>
-              <FontAwesomeIcon icon={faChartLine} transform="shrink-4" />{' '}
-              Actively Staking
-            </h2>
+            <h3 className="heading">
+              <FontAwesomeIcon icon={faProjectDiagram} transform="shrink-4" />{' '}
+              Nominating
+            </h3>
             {activeStaking.map((item: any, i: number) => {
               const { stash, controller } = item;
               const stashAccount = getAccount(stash);
@@ -211,7 +215,7 @@ export const Accounts = forwardRef((props: any, ref: any) => {
                   onClick={() => {
                     if (stashAccount) {
                       connectToAccount(stashAccount);
-                      setStatus(0);
+                      setStatus(2);
                     }
                   }}
                 >
@@ -239,9 +243,9 @@ export const Accounts = forwardRef((props: any, ref: any) => {
 
         {activePooling.length > 0 && (
           <>
-            <h2>
+            <h3 className="heading">
               <FontAwesomeIcon icon={faUsers} transform="shrink-4" /> In Pool
-            </h2>
+            </h3>
             {activePooling.map((item: PoolMembership, i: number) => {
               const { address } = item;
               const account = getAccount(address);
@@ -259,7 +263,7 @@ export const Accounts = forwardRef((props: any, ref: any) => {
 
         {inactive.length > 0 && (
           <>
-            <h2>Not Staking</h2>
+            <h3 className="heading">Not Staking</h3>
             {inactive.map((item: string, i: number) => {
               const account = getAccount(item);
               const address = account?.address ?? '';

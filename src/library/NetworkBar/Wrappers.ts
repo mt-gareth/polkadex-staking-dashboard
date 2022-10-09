@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { textSecondary, backgroundNetworkBar, networkColor } from 'theme';
 import { SIDE_MENU_STICKY_THRESHOLD } from 'consts';
 
-export const Wrapper = styled(motion.div)<any>`
+export const Wrapper = styled(motion.div)`
   width: 100%;
   display: flex;
   flex-flow: column nowrap;
@@ -132,7 +132,6 @@ export const NetworkInfo = styled(motion.div)`
 
     > div,
     > button {
-      padding: 0.25rem 1.5rem 0.25rem;
       background: rgba(0, 0, 0, 0.1);
       margin-right: 1rem;
       border-radius: 0.5rem;
@@ -144,9 +143,12 @@ export const NetworkInfo = styled(motion.div)`
         margin-right: 0;
       }
     }
+    > div,
+    > span {
+      padding: 1rem;
+    }
     h3 {
       margin: 0.25rem 0;
-      font-variation-settings: 'wght' 575;
       color: #f1f1f1;
       padding: 0.2rem 0;
 
@@ -169,14 +171,6 @@ export const Separator = styled.div`
   margin: 0 0.3rem;
   width: 1px;
   height: 1rem;
-`;
-
-export const ConnectionSymbol = styled.div<any>`
-  width: 10px;
-  height: 10px;
-  background: ${(props) => props.color};
-  border-radius: 50%;
-  margin: 0 0.7rem;
 `;
 
 export default Wrapper;

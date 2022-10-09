@@ -20,7 +20,7 @@ export const PoolAccount = (props: PoolAccountProps) => {
   const { activeAccount } = useConnect();
   const { fetchPoolsMetaBatch, meta } = useBondedPools();
 
-  const { label }: any = props;
+  const { label } = props;
 
   // is this the initial fetch
   const [fetched, setFetched] = useState(false);
@@ -50,8 +50,7 @@ export const PoolAccount = (props: PoolAccountProps) => {
   };
 
   const filled = props.filled ?? false;
-  const fontSize = props.fontSize ?? '0.95rem';
-  const wallet = props.wallet ?? false;
+  const fontSize = props.fontSize ?? '1.05rem';
   const { canClick }: { canClick: boolean } = props;
 
   const metaBatch = meta[batchKey];
@@ -91,12 +90,6 @@ export const PoolAccount = (props: PoolAccountProps) => {
       <span className={`title${syncing === true ? ` syncing` : ``}`}>
         {display}
       </span>
-
-      {wallet && (
-        <div className="wallet">
-          <WalletSVG />
-        </div>
-      )}
     </Wrapper>
   );
 };

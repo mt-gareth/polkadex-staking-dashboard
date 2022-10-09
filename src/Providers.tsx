@@ -6,28 +6,29 @@ import { EntryWrapper as Wrapper } from 'Wrappers';
 import Router from 'Router';
 import { withProviders } from 'library/Hooks';
 import { TooltipProvider } from 'contexts/Tooltip';
+import { TxFeesProvider } from 'contexts/TxFees';
+import { TransferOptionsProvider } from 'contexts/TransferOptions';
 import { AccountProvider } from './contexts/Account';
 import { APIProvider, useApi } from './contexts/Api';
-import { AssistantProvider } from './contexts/Assistant';
 import { BalancesProvider } from './contexts/Balances';
 import { ConnectProvider } from './contexts/Connect';
 import { ExtrinsicsProvider } from './contexts/Extrinsics';
 import { MenuProvider } from './contexts/Menu';
-import { PaletteProvider } from './contexts/Palette';
 import { ModalProvider } from './contexts/Modal';
 import { NetworkMetricsProvider } from './contexts/Network';
 import { NotificationsProvider } from './contexts/Notifications';
 import { PoolsConfigProvider } from './contexts/Pools/PoolsConfig';
 import { BondedPoolsProvider } from './contexts/Pools/BondedPools';
+import { PoolMembersProvider } from './contexts/Pools/PoolMembers';
 import { PoolMembershipsProvider } from './contexts/Pools/PoolMemberships';
 import { ActivePoolProvider } from './contexts/Pools/ActivePool';
-import { SideBarProvider } from './contexts/SideBar';
 import { StakingProvider } from './contexts/Staking';
 import { SubscanProvider } from './contexts/Subscan';
 import { ValidatorsProvider } from './contexts/Validators';
 import { UIProvider } from './contexts/UI';
 import { useTheme } from './contexts/Themes';
 import { SessionEraProvider } from './contexts/SessionEra';
+import { HelpProvider } from './contexts/Help';
 
 export const WrappedRouter = () => (
   <Wrapper>
@@ -36,11 +37,13 @@ export const WrappedRouter = () => (
 );
 
 export const ThemedRouter = () => {
-  const { mode, card } = useTheme();
+  const { mode } = useTheme();
   const { network } = useApi();
 
   return (
-    <ThemeProvider theme={{ mode, card, network: `${network.name}-${mode}` }}>
+    <ThemeProvider
+      theme={{ mode, card: 'shadow', network: `${network.name}-${mode}` }}
+    >
       <WrappedRouter />
     </ThemeProvider>
   );
@@ -48,26 +51,27 @@ export const ThemedRouter = () => {
 
 export const Providers = withProviders(
   APIProvider,
-  ModalProvider,
   ConnectProvider,
-  AssistantProvider,
-  SideBarProvider,
+  HelpProvider,
   NetworkMetricsProvider,
   AccountProvider,
   BalancesProvider,
   StakingProvider,
   PoolsConfigProvider,
-  BondedPoolsProvider,
   PoolMembershipsProvider,
   ActivePoolProvider,
+  BondedPoolsProvider,
+  PoolMembersProvider,
+  TransferOptionsProvider,
   ValidatorsProvider,
   UIProvider,
   SubscanProvider,
   MenuProvider,
   TooltipProvider,
-  PaletteProvider,
   NotificationsProvider,
+  TxFeesProvider,
   ExtrinsicsProvider,
+  ModalProvider,
   SessionEraProvider
 )(ThemedRouter);
 

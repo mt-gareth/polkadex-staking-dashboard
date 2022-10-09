@@ -29,11 +29,15 @@ export interface APIConstants {
 
 export interface APIContextInterface {
   connect: (_network: NetworkName) => Promise<void>;
-  fetchNetworkTokenPrice: () => void;
-  switchNetwork: (_network: NetworkName) => Promise<void>;
+  fetchDotPrice: () => void;
+  switchNetwork: (
+    _network: NetworkName,
+    _isLightClient: boolean
+  ) => Promise<void>;
   api: ApiPromise | null;
   consts: APIConstants;
   isReady: boolean;
+  isLightClient: boolean;
   status: ConnectionStatus;
   network: Network;
 }

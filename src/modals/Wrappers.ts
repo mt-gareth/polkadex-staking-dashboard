@@ -7,11 +7,11 @@ import {
   textSecondary,
   modalOverlayBackground,
   modalBackground,
-  networkColor,
   cardShadow,
   shadowColor,
   cardBorder,
   borderPrimary,
+  networkColor,
 } from 'theme';
 
 // Blurred background modal wrapper
@@ -24,7 +24,7 @@ export const ModalWrapper = styled(motion.div)`
   backdrop-filter: blur(4px);
 
   /* modal content wrapper */
-  .content_wrapper {
+  > div {
     box-sizing: border-box;
     height: 100%;
     display: flex;
@@ -44,27 +44,36 @@ export const ModalWrapper = styled(motion.div)`
   }
 `;
 
-export const HeightWrapper = styled.div<any>`
+export const HeightWrapper = styled.div<{ size: string }>`
   border: ${cardBorder} ${borderPrimary};
   box-shadow: ${cardShadow} ${shadowColor};
-  transition: height 0.6s cubic-bezier(0.1, 1, 0.2, 1);
+  transition: height 0.5s cubic-bezier(0.1, 1, 0.2, 1);
   box-sizing: border-box;
   width: 100%;
-  max-width: ${(props) => (props.size === 'large' ? '800px' : '600px')};
+  max-width: ${(props) =>
+    props.size === 'xl'
+      ? '1250px'
+      : props.size === 'large'
+      ? '800px'
+      : '600px'};
   max-height: 100%;
-  border-radius: 1rem;
+  border-radius: 1.5rem;
   z-index: 9;
   position: relative;
 `;
 
 // Modal content wrapper
-export const ContentWrapper = styled.div<any>`
+export const ContentWrapper = styled.div`
   box-sizing: border-box;
   background: ${modalBackground};
   width: 100%;
   height: auto;
   overflow: hidden;
   position: relative;
+
+  a {
+    color: ${networkColor};
+  }
   .header {
     width: 100%;
     display: flex;
@@ -84,18 +93,26 @@ export const ContentWrapper = styled.div<any>`
 `;
 
 // generic wrapper for modal padding
-export const PaddingWrapper = styled.div<any>`
+export const PaddingWrapper = styled.div<{
+  verticalOnly?: boolean;
+  horizontalOnly?: boolean;
+}>`
   box-sizing: border-box;
   display: flex;
   flex-flow: column wrap;
   align-items: flex-start;
   justify-content: flex-start;
   width: 100%;
-  padding: ${(props) => (props.verticalOnly ? '1rem 0' : '1rem')};
+  padding: ${(props) =>
+    props.verticalOnly
+      ? '1rem 0'
+      : props.horizontalOnly
+      ? '0 1rem'
+      : '1rem 1.25rem'};
 `;
 
 // modal header, used for extrinsics forms
-export const HeadingWrapper = styled.h3<any>`
+export const HeadingWrapper = styled.h3<{ noPadding?: boolean }>`
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
@@ -118,7 +135,6 @@ export const FooterWrapper = styled.div`
   justify-content: flex-end;
   align-items: center;
   width: 100%;
-  margin-top: 1rem;
 
   h3 {
     color: ${textSecondary};

@@ -22,7 +22,7 @@ export const Connected = () => {
   const { isSyncing } = useUi();
 
   let poolAddress = '';
-  if (activeBondedPool !== undefined) {
+  if (activeBondedPool) {
     const { addresses } = activeBondedPool;
     poolAddress = addresses.stash;
   }
@@ -40,20 +40,12 @@ export const Connected = () => {
           {/* default account display / stash label if actively nominating */}
           <HeadingWrapper>
             <Account
-              canClick
-              onClick={() => {
-                openModalWith(
-                  'ConnectAccounts',
-                  { section: accounts.length ? 1 : 0 },
-                  'large'
-                );
-              }}
+              canClick={false}
               value={activeAccount}
               readOnly={!accountHasSigner(activeAccount)}
               label={activeAccountLabel}
               format="name"
               filled
-              wallet
             />
           </HeadingWrapper>
 
@@ -72,19 +64,14 @@ export const Connected = () => {
                 }
                 format="name"
                 label="Controller"
-                canClick={hasController()}
-                onClick={() => {
-                  if (hasController()) {
-                    openModalWith('UpdateController', {}, 'large');
-                  }
-                }}
+                canClick={false}
                 filled
               />
             </HeadingWrapper>
           )}
 
           {/* pool account display / hide if not in pool */}
-          {activeBondedPool !== undefined && !isSyncing && (
+          {activeBondedPool !== null && !isSyncing && (
             <HeadingWrapper>
               <PoolAccount
                 value={poolAddress}

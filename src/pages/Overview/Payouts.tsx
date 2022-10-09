@@ -44,11 +44,12 @@ export const Payouts = () => {
           position: 'absolute',
           opacity: notStaking ? 0.75 : 1,
           transition: 'opacity 0.5s',
+          marginTop: '1.5rem',
         }}
       >
-        <PayoutBar days={21} height="170px" />
-        <div style={{ marginTop: '1rem' }}>
-          <PayoutLine days={21} height="70px" />
+        <PayoutBar days={19} height="160px" />
+        <div style={{ marginTop: '3rem' }}>
+          <PayoutLine days={19} average={10} height="70px" />
         </div>
       </div>
     </div>

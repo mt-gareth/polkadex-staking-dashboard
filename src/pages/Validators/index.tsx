@@ -8,7 +8,7 @@ import { CardWrapper } from 'library/Graphs/Wrappers';
 import { ValidatorList } from 'library/ValidatorList';
 import { PageTitle } from 'library/PageTitle';
 import { PageRowWrapper } from 'Wrappers';
-import ActiveEraStatBox from '../Overview/Stats/ActiveEra';
+import AverageCommissionStatBox from './Stats/AverageCommission';
 import TotalValidatorsStatBox from './Stats/TotalValidators';
 import ActiveValidatorsStatBox from './Stats/ActiveValidators';
 import { PageProps } from '../types';
@@ -26,7 +26,7 @@ export const Validators = (props: PageProps) => {
       <StatBoxList>
         <TotalValidatorsStatBox />
         <ActiveValidatorsStatBox />
-        <ActiveEraStatBox />
+        <AverageCommissionStatBox />
       </StatBoxList>
       <PageRowWrapper className="page-padding" noVerticalSpacer>
         <CardWrapper>
@@ -44,12 +44,14 @@ export const Validators = (props: PageProps) => {
 
               {validators.length > 0 && (
                 <ValidatorList
+                  bondType="stake"
                   validators={validators}
                   batchKey="validators_browse"
                   title="Network Validators"
                   selectable={false}
                   allowMoreCols
                   allowFilters
+                  allowSearch
                   pagination
                   toggleFavourites
                 />

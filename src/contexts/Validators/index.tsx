@@ -5,6 +5,7 @@ import BN from 'bn.js';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   sleep,
+  shuffle,
   removePercentage,
   rmCommas,
   setStateWithRef,
@@ -14,11 +15,13 @@ import {
 import { AnyApi, AnyMetaBatch, Fn } from 'types';
 import { MIN_BOND_PRECISION } from 'consts';
 import {
+  SessionParachainValidators,
   SessionValidators,
   Validator,
   ValidatorAddresses,
   ValidatorsContextInterface,
 } from 'contexts/Validators/types';
+import { VALIDATOR_COMMUNITY } from 'config/validators';
 import { useApi } from '../Api';
 import { useConnect } from '../Connect';
 import { useNetworkMetrics } from '../Network';
@@ -46,17 +49,25 @@ export const ValidatorsProvider = ({
   const { poolNominations } = useActivePool();
   const { units } = network;
   const { maxNominatorRewardedPerValidator } = consts;
+  const { activeEra, earliestStoredSession } = metrics;
 
   // stores the total validator entries
   const [validators, setValidators] = useState<Array<Validator>>([]);
 
   // track whether the validator list has been fetched yet
-  const [fetchedValidators, setFetchedValidators] = useState<boolean>(false);
+  const [fetchedValidators, setFetchedValidators] = useState<number>(0);
 
   // stores the currently active validator set
   const [sessionValidators, setSessionValidators] = useState<SessionValidators>(
     defaults.sessionValidators
   );
+
+  // stores the average network commission rate
+  const [avgCommission, setAvgCommission] = useState(0);
+
+  // stores the currently active parachain validator set
+  const [sessionParachainValidators, setSessionParachainValidators] =
+    useState<SessionParachainValidators>(defaults.sessionParachainValidators);
 
   // stores the meta data batches for validator lists
   const [validatorMetaBatches, setValidatorMetaBatch] = useState<AnyMetaBatch>(
@@ -94,14 +105,22 @@ export const ValidatorsProvider = ({
     null
   );
 
+  // stores a shuffled validator community
+  const [validatorCommunity, setValidatorCommunity] = useState<any>(
+    shuffle(VALIDATOR_COMMUNITY)
+  );
+
   // reset validators list on network change
   useEffect(() => {
-    setFetchedValidators(false);
+    setFetchedValidators(0);
     setSessionValidators(defaults.sessionValidators);
+    setSessionParachainValidators(defaults.sessionParachainValidators);
     removeValidatorMetaBatch('validators_browse');
+    setAvgCommission(0);
     setValidators([]);
   }, [network]);
 
+  // fetch validators and session validators when activeEra ready
   useEffect(() => {
     if (isReady) {
       fetchValidators();
@@ -116,7 +135,14 @@ export const ValidatorsProvider = ({
         });
       });
     };
-  }, [isReady, metrics.activeEra]);
+  }, [isReady, activeEra]);
+
+  // fetch parachain session validators when earliestStoredSession ready
+  useEffect(() => {
+    if (isReady && earliestStoredSession.gt(new BN(0))) {
+      subscribeParachainValidators(api);
+    }
+  }, [isReady, earliestStoredSession]);
 
   // pre-populating validator meta batches. Needed for generating nominations
   useEffect(() => {
@@ -177,8 +203,10 @@ export const ValidatorsProvider = ({
   };
 
   // re-fetch favourites upon network change
+  // re-shuffle validator community on network change
   useEffect(() => {
     setFavourites(getFavourites());
+    setValidatorCommunity(shuffle(VALIDATOR_COMMUNITY));
   }, [network]);
 
   // fetch favourites in validator list format
@@ -210,18 +238,26 @@ export const ValidatorsProvider = ({
     if (!isReady || !api) {
       return;
     }
-    if (fetchedValidators) {
+
+    // return if fetching not started
+    if ([1, 2].includes(fetchedValidators)) {
       return;
     }
 
+    setFetchedValidators(1);
+
     // fetch validator set
     const v: Array<Validator> = [];
+    let totalNonAllCommission: BN = new BN(0);
     const exposures = await api.query.staking.validators.entries();
     exposures.forEach(([_args, _prefs]: AnyApi) => {
       const address = _args.args[0].toHuman();
       const prefs = _prefs.toHuman();
 
       const _commission = removePercentage(prefs.commission);
+      if (_commission !== 100) {
+        totalNonAllCommission = totalNonAllCommission.add(new BN(_commission));
+      }
 
       v.push({
         address,
@@ -232,8 +268,22 @@ export const ValidatorsProvider = ({
       });
     });
 
-    setFetchedValidators(true);
-    setValidators(v);
+    // get average network commission for all non-100% commissioned validators.
+    const nonCommissionCount = exposures.filter(
+      (e: AnyApi) => e.commission !== '100%'
+    ).length;
+
+    const _avgCommission = nonCommissionCount
+      ? toFixedIfNecessary(
+          totalNonAllCommission.toNumber() / nonCommissionCount,
+          2
+        )
+      : 0;
+
+    setFetchedValidators(2);
+    setAvgCommission(_avgCommission);
+    // shuffle validators before setting them.
+    setValidators(shuffle(v));
   };
 
   /*
@@ -245,6 +295,24 @@ export const ValidatorsProvider = ({
         (_validators: AnyApi) => {
           setSessionValidators({
             ...sessionValidators,
+            list: _validators.toHuman(),
+            unsub,
+          });
+        }
+      );
+    }
+  };
+
+  /*
+   * subscribe to active parachain validators
+   */
+  const subscribeParachainValidators = async (_api: AnyApi) => {
+    if (isReady) {
+      const unsub = await _api.query.paraSessionInfo.accountKeys(
+        earliestStoredSession.toString(),
+        (_validators: AnyApi) => {
+          setSessionParachainValidators({
+            ...sessionParachainValidators,
             list: _validators.toHuman(),
             unsub,
           });
@@ -358,12 +426,16 @@ export const ValidatorsProvider = ({
           const _batchesUpdated = Object.assign(
             validatorMetaBatchesRef.current
           );
-          _batchesUpdated[key].identities = identities;
-          setStateWithRef(
-            { ..._batchesUpdated },
-            setValidatorMetaBatch,
-            validatorMetaBatchesRef
-          );
+
+          // check if batch still exists before updating
+          if (_batchesUpdated[key]) {
+            _batchesUpdated[key].identities = identities;
+            setStateWithRef(
+              { ..._batchesUpdated },
+              setValidatorMetaBatch,
+              validatorMetaBatchesRef
+            );
+          }
         }
       );
       return unsub;
@@ -405,12 +477,16 @@ export const ValidatorsProvider = ({
           const _batchesUpdated = Object.assign(
             validatorMetaBatchesRef.current
           );
-          _batchesUpdated[key].supers = supers;
-          setStateWithRef(
-            { ..._batchesUpdated },
-            setValidatorMetaBatch,
-            validatorMetaBatchesRef
-          );
+
+          // check if batch still exists before updating
+          if (_batchesUpdated[key]) {
+            _batchesUpdated[key].supers = supers;
+            setStateWithRef(
+              { ..._batchesUpdated },
+              setValidatorMetaBatch,
+              validatorMetaBatchesRef
+            );
+          }
         }
       );
       return unsub;
@@ -430,7 +506,7 @@ export const ValidatorsProvider = ({
     const args: AnyApi = [];
 
     for (let i = 0; i < v.length; i++) {
-      args.push([metrics.activeEra.index, v[i].address]);
+      args.push([activeEra.index, v[i].address]);
     }
 
     const unsub3 = await api.query.staking.erasStakers.multi<AnyApi>(
@@ -490,13 +566,16 @@ export const ValidatorsProvider = ({
 
         // commit update
         const _batchesUpdated = Object.assign(validatorMetaBatchesRef.current);
-        _batchesUpdated[key].stake = stake;
 
-        setStateWithRef(
-          { ..._batchesUpdated },
-          setValidatorMetaBatch,
-          validatorMetaBatchesRef
-        );
+        // check if batch still exists before updating
+        if (_batchesUpdated[key]) {
+          _batchesUpdated[key].stake = stake;
+          setStateWithRef(
+            { ..._batchesUpdated },
+            setValidatorMetaBatch,
+            validatorMetaBatchesRef
+          );
+        }
       }
     );
 
@@ -567,12 +646,15 @@ export const ValidatorsProvider = ({
         addFavourite,
         removeFavourite,
         validators,
+        avgCommission,
         meta: validatorMetaBatchesRef.current,
         session: sessionValidators,
+        sessionParachain: sessionParachainValidators.list,
         favourites,
         nominated,
         poolNominated,
         favouritesList,
+        validatorCommunity,
       }}
     >
       {children}

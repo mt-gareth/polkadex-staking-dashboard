@@ -113,7 +113,7 @@ export const StakingProvider = ({
 
       if (nominations.length && stakers !== null) {
         for (const n of nominations) {
-          const staker = stakers.find((item: any) => item.address === n);
+          const staker = stakers.find((item) => item.address === n);
 
           if (staker !== undefined) {
             let { others } = staker;
@@ -299,7 +299,7 @@ export const StakingProvider = ({
 
     for (const nomination of nominations) {
       const s = eraStakersRef.current.stakers.find(
-        (_n: any) => _n.address === nomination
+        (_n) => _n.address === nomination
       );
 
       if (s === undefined) {
@@ -335,6 +335,36 @@ export const StakingProvider = ({
       return false;
     }
     return getBondedAccount(activeAccount) !== null;
+  };
+
+  /*
+   * Gets the nomination statuses of passed in nominations
+   */
+  const getNominationsStatusFromTargets = (
+    who: MaybeAccount,
+    _targets: [any]
+  ) => {
+    const statuses: { [key: string]: string } = {};
+
+    if (!_targets.length) {
+      return statuses;
+    }
+
+    for (const target of _targets) {
+      const s = eraStakers.stakers.find((_n: any) => _n.address === target);
+
+      if (s === undefined) {
+        statuses[target] = 'waiting';
+        continue;
+      }
+      const exists = (s.others ?? []).find((_o: any) => _o.who === who);
+      if (exists === undefined) {
+        statuses[target] = 'inactive';
+        continue;
+      }
+      statuses[target] = 'active';
+    }
+    return statuses;
   };
 
   /*
@@ -415,6 +445,7 @@ export const StakingProvider = ({
     <StakingContext.Provider
       value={{
         getNominationsStatus,
+        getNominationsStatusFromTargets,
         setTargets,
         hasController,
         getControllerNotImported,

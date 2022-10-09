@@ -3,27 +3,22 @@
 
 import styled from 'styled-components';
 import { motion } from 'framer-motion';
-import {
-  textPrimary,
-  textSecondary,
-  borderSecondary,
-  borderPrimary,
-} from 'theme';
+import { textSecondary, borderSecondary, borderPrimary } from 'theme';
 
 export const Wrapper = styled(motion.button)<any>`
   border: 1px solid ${borderPrimary};
+  cursor: ${(props) => props.cursor};
   background: ${(props) => props.fill};
   font-size: ${(props) => props.fontSize};
   box-sizing: border-box;
-  border-radius: 1rem;
+  border-radius: 1.25rem;
   box-shadow: none;
   display: flex;
   flex-flow: row wrap;
   justify-content: flex-start;
   align-items: center;
-  font-variation-settings: 'wght' 540;
   padding: 0 1rem;
-  max-width: 250px;
+  max-width: 225px;
   flex: 1;
 
   .identicon {
@@ -34,7 +29,6 @@ export const Wrapper = styled(motion.button)<any>`
     border-right: 1px solid ${borderSecondary};
     color: ${textSecondary};
     font-size: 0.8em;
-    font-variation-settings: 'wght' 535;
     display: flex;
     flex-flow: row nowrap;
     align-items: center;
@@ -52,12 +46,12 @@ export const Wrapper = styled(motion.button)<any>`
   }
 
   .title {
-    color: ${textPrimary};
+    color: ${textSecondary};
     margin-left: 0.25rem;
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    line-height: 2.2rem;
+    line-height: 2.15rem;
     flex: 1;
 
     &.unassigned {
@@ -73,7 +67,7 @@ export const Wrapper = styled(motion.button)<any>`
     opacity: 0.8;
 
     path {
-      fill: ${textPrimary};
+      fill: ${textSecondary};
     }
   }
 `;

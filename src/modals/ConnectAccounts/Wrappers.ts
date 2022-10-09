@@ -45,18 +45,20 @@ export const Wrapper = styled.div`
   overflow: hidden;
 
   h1 {
-    padding: 0 0.5rem;
-  }
-
-  h2 {
     color: ${textPrimary};
-    border-bottom: 1px solid ${borderPrimary};
-    padding-bottom: 0.75rem;
-    margin: 2rem 0 1rem 0;
+    font-size: 1.4rem;
+    font-family: 'Unbounded', 'sans-serif', sans-serif;
+    padding: 0.5rem 0.5rem 0 0.5rem;
   }
 
   h3 {
-    margin: 1rem 0;
+    color: ${textPrimary};
+
+    &.heading {
+      border-bottom: 1px solid ${borderPrimary};
+      padding-bottom: 0.75rem;
+      margin: 2rem 0 1rem 0;
+    }
   }
 
   .head {
@@ -119,6 +121,7 @@ export const AccountGroupWrapper = styled(motion.button)`
     }
 
     > div {
+      margin: 0.4rem 0;
       > button,
       > div {
         border-radius: 0.75rem;
@@ -166,8 +169,8 @@ export const AccountWrapper = styled.div`
     flex-flow: row nowrap;
     align-items: center;
     min-height: 3.5rem;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
 
     > div {
       box-sizing: border-box;
@@ -223,7 +226,7 @@ export const AccountWrapper = styled.div`
   }
 `;
 
-export const ExtensionWrapper = styled.div<any>`
+export const ExtensionWrapper = styled.div<{ noSpacing?: boolean }>`
   box-sizing: border-box;
   width: 100%;
 

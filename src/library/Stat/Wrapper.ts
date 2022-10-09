@@ -13,15 +13,19 @@ export const Wrapper = styled.div`
     justify-content: flex-start;
     margin: 0 0 0.5rem 0;
 
-    .assistant-icon {
-      margin-left: 0.5rem;
+    .help-icon {
+      margin-left: 0.55rem;
     }
   }
   h2 {
-    display: flex;
-    flex-flow: row wrap;
-    align-items: center;
-    margin-bottom: 0;
-    line-height: 2.1rem;
+    &.stat {
+      display: flex;
+      flex-flow: row wrap;
+      align-items: center;
+      margin: 0;
+      > span {
+        flex-grow: 1;
+      }
+    }
   }
 `;

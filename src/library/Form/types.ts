@@ -2,17 +2,17 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { ExternalAccount, ExtensionAccount } from 'contexts/Connect/types';
-import { BondOptions } from 'contexts/Balances/types';
+import { Balance } from 'contexts/Balances/types';
 
 export interface ExtensionAccountItem extends ExtensionAccount {
   active?: boolean;
   alert?: string;
-  bondOptions?: BondOptions;
+  balance?: Balance;
 }
 export interface ExternalAccountItem extends ExternalAccount {
   active?: boolean;
   alert?: string;
-  bondOptions?: BondOptions;
+  balance?: Balance;
 }
 export type ImportedAccountItem = ExtensionAccountItem | ExternalAccountItem;
 
@@ -39,27 +39,45 @@ export interface AccountSelectProps {
   value: InputItem;
 }
 
+export interface BondFeedbackProps {
+  setters: any;
+  bondType: string;
+  defaultBond: number | null;
+  inSetup?: boolean;
+  listenIsValid: { (v: boolean): void } | { (): void };
+  warnings?: string[];
+  disableTxFeeUpdate?: boolean;
+  setLocalResize?: () => void;
+}
+
 export interface BondInputProps {
   setters: any;
   value: any;
-  task: string;
-  defaultValue: number;
+  defaultValue: number | string;
   disabled: boolean;
-  freeToBond: number;
-  freeToUnbondToMin: number;
+  freeBalance: number;
+  disableTxFeeUpdate?: boolean;
 }
 
-export interface BondInputWithFeedbackProps {
+export interface UnbondFeedbackProps {
   setters: any;
   bondType: string;
-  defaultBond: number;
-  unbond: boolean;
-  nominating?: boolean;
+  defaultBond: number | null;
+  inSetup?: boolean;
   listenIsValid: { (v: boolean): void } | { (): void };
   warnings?: string[];
+  setLocalResize?: () => void;
 }
 
-export interface BondStatusBarProps {
+export interface UnbondInputProps {
+  freeToUnbondToMin: number;
+  defaultValue: number | string;
+  disabled: boolean;
+  setters: any;
+  value: any;
+}
+
+export interface NominateStatusBarProps {
   value: number;
 }
 

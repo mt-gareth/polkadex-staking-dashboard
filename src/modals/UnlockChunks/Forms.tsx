@@ -14,8 +14,14 @@ import { useConnect } from 'contexts/Connect';
 import { useSubmitExtrinsic } from 'library/Hooks/useSubmitExtrinsic';
 import { Warning } from 'library/Form/Warning';
 import { useStaking } from 'contexts/Staking';
-import { planckBnToUnit } from 'Utils';
+import { planckBnToUnit, rmCommas } from 'Utils';
 import { useActivePool } from 'contexts/Pools/ActivePool';
+import { usePoolsConfig } from 'contexts/Pools/PoolsConfig';
+import { useBondedPools } from 'contexts/Pools/BondedPools';
+import { usePoolMembers } from 'contexts/Pools/PoolMembers';
+import { usePoolMemberships } from 'contexts/Pools/PoolMemberships';
+import { EstimatedTxFee } from 'library/EstimatedTxFee';
+import { useTxFees } from 'contexts/TxFees';
 import { ContentWrapper } from './Wrappers';
 import { FooterWrapper, Separator, NotesWrapper } from '../Wrappers';
 
@@ -24,10 +30,16 @@ export const Forms = forwardRef(
     const { api, network } = useApi();
     const { activeAccount, accountHasSigner } = useConnect();
     const { staking } = useStaking();
+    const { removeFavourite: removeFavouritePool } = usePoolsConfig();
+    const { membership } = usePoolMemberships();
     const { activeBondedPool } = useActivePool();
+    const { removeFromBondedPools } = useBondedPools();
+    const { removePoolMember } = usePoolMembers();
     const { setStatus: setModalStatus, config } = useModal();
-    const { bondType } = config || {};
     const { getBondedAccount } = useBalances();
+    const { txFeesValid } = useTxFees();
+
+    const { bondType, poolClosure } = config || {};
     const { historyDepth } = staking;
     const { units } = network;
     const controller = getBondedAccount(activeAccount);
@@ -59,20 +71,35 @@ export const Forms = forwardRef(
       } else if (task === 'withdraw' && isPooling && activeBondedPool) {
         _tx = api.tx.nominationPools.withdrawUnbonded(
           activeAccount,
-          activeBondedPool?.slashingSpansCount
+          historyDepth
         );
       }
       return _tx;
     };
     const signingAccount = isStaking ? controller : activeAccount;
-    const { submitTx, estimatedFee, submitting } = useSubmitExtrinsic({
+    const { submitTx, submitting } = useSubmitExtrinsic({
       tx: tx(),
       from: signingAccount,
       shouldSubmit: valid,
       callbackSubmit: () => {
         setModalStatus(0);
       },
-      callbackInBlock: () => {},
+      callbackInBlock: () => {
+        // if pool is being closed, remove from static lists
+        if (poolClosure) {
+          removeFavouritePool(activeBondedPool?.addresses?.stash ?? '');
+          removeFromBondedPools(activeBondedPool?.id ?? 0);
+        }
+
+        // if no more bonded funds from pool, remove from poolMembers list
+        if (bondType === 'pool') {
+          const points = membership?.points ? rmCommas(membership.points) : 0;
+          const bonded = planckBnToUnit(new BN(points), network.units);
+          if (bonded === 0) {
+            removePoolMember(activeAccount);
+          }
+        }
+      },
     });
 
     const value = unlock?.value ?? new BN(0);
@@ -96,10 +123,7 @@ export const Forms = forwardRef(
             )}
             <Separator />
             <NotesWrapper>
-              <p>
-                Estimated Tx Fee:{' '}
-                {estimatedFee === null ? '...' : `${estimatedFee}`}
-              </p>
+              <EstimatedTxFee />
             </NotesWrapper>
           </div>
           <FooterWrapper>
@@ -119,7 +143,10 @@ export const Forms = forwardRef(
                 className="submit"
                 onClick={() => submitTx()}
                 disabled={
-                  !valid || submitting || !accountHasSigner(signingAccount)
+                  !valid ||
+                  submitting ||
+                  !accountHasSigner(signingAccount) ||
+                  !txFeesValid
                 }
               >
                 <FontAwesomeIcon

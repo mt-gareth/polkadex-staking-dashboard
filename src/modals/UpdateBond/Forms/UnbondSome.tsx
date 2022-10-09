@@ -6,17 +6,20 @@ import { useModal } from 'contexts/Modal';
 import { useBalances } from 'contexts/Balances';
 import { useApi } from 'contexts/Api';
 import { useConnect } from 'contexts/Connect';
-import { BondInputWithFeedback } from 'library/Form/BondInputWithFeedback';
+import { UnbondFeedback } from 'library/Form/Unbond/UnbondFeedback';
 import { useSubmitExtrinsic } from 'library/Hooks/useSubmitExtrinsic';
 import { useStaking } from 'contexts/Staking';
 import { planckBnToUnit, unitToPlanckBn } from 'Utils';
 import { useActivePool } from 'contexts/Pools/ActivePool';
 import { usePoolsConfig } from 'contexts/Pools/PoolsConfig';
-import { BondOptions } from 'contexts/Balances/types';
+import { EstimatedTxFee } from 'library/EstimatedTxFee';
+import { useTxFees } from 'contexts/TxFees';
+import { useTransferOptions } from 'contexts/TransferOptions';
 import { NotesWrapper } from '../../Wrappers';
 import { FormFooter } from './FormFooter';
+import { FormsProps } from '../types';
 
-export const UnbondSome = (props: any) => {
+export const UnbondSome = (props: FormsProps) => {
   const { setSection } = props;
 
   const { api, network, consts } = useApi();
@@ -24,37 +27,44 @@ export const UnbondSome = (props: any) => {
   const { setStatus: setModalStatus, setResize, config } = useModal();
   const { activeAccount, accountHasSigner } = useConnect();
   const { staking, getControllerNotImported } = useStaking();
-  const { getBondOptions, getBondedAccount } = useBalances();
+  const { getBondedAccount } = useBalances();
   const { bondType } = config;
   const { stats } = usePoolsConfig();
-  const { getPoolBondOptions } = useActivePool();
+  const { isDepositor } = useActivePool();
+  const { txFeesValid } = useTxFees();
+  const { getTransferOptions } = useTransferOptions();
+
   const controller = getBondedAccount(activeAccount);
   const controllerNotImported = getControllerNotImported(controller);
   const { minNominatorBond: minNominatorBondBn } = staking;
-  const stakeBondOptions: BondOptions = getBondOptions(activeAccount);
-  const poolBondOptions = getPoolBondOptions(activeAccount);
-  const isStaking = bondType === 'stake';
-  const isPooling = bondType === 'pool';
-  const { minJoinBond: minJoinBondBn } = stats;
+  const { minJoinBond: minJoinBondBn, minCreateBond: minCreateBondBn } = stats;
   const { bondDuration } = consts;
 
+  const isStaking = bondType === 'stake';
+  const isPooling = bondType === 'pool';
+
+  const allTransferOptions = getTransferOptions(activeAccount);
   const { freeToUnbond: freeToUnbondBn } = isPooling
-    ? poolBondOptions
-    : stakeBondOptions;
+    ? allTransferOptions.pool
+    : allTransferOptions.nominate;
 
   // convert BN values to number
   const freeToUnbond = planckBnToUnit(freeToUnbondBn, units);
   const minJoinBond = planckBnToUnit(minJoinBondBn, units);
+  const minCreateBond = planckBnToUnit(minCreateBondBn, units);
   const minNominatorBond = planckBnToUnit(minNominatorBondBn, units);
+
   // local bond value
   const [bond, setBond] = useState({ bond: freeToUnbond });
 
   // bond valid
-  const [bondValid, setBondValid]: any = useState(false);
+  const [bondValid, setBondValid] = useState<boolean>(false);
 
   // get the max amount available to unbond
   const freeToUnbondToMin = isPooling
-    ? Math.max(freeToUnbond - minJoinBond, 0)
+    ? isDepositor()
+      ? Math.max(freeToUnbond - minCreateBond, 0)
+      : Math.max(freeToUnbond - minJoinBond, 0)
     : Math.max(freeToUnbond - minNominatorBond, 0);
 
   // unbond some validation
@@ -97,7 +107,7 @@ export const UnbondSome = (props: any) => {
 
   const signingAccount = isPooling ? activeAccount : controller;
 
-  const { submitTx, estimatedFee, submitting } = useSubmitExtrinsic({
+  const { submitTx, submitting } = useSubmitExtrinsic({
     tx: tx(),
     from: signingAccount,
     shouldSubmit: bondValid,
@@ -106,10 +116,6 @@ export const UnbondSome = (props: any) => {
     },
     callbackInBlock: () => {},
   });
-
-  const TxFee = (
-    <p>Estimated Tx Fee: {estimatedFee === null ? '...' : `${estimatedFee}`}</p>
-  );
 
   const warnings = [];
   if (!accountHasSigner(activeAccount)) {
@@ -120,9 +126,8 @@ export const UnbondSome = (props: any) => {
     <>
       <div className="items">
         <>
-          <BondInputWithFeedback
+          <UnbondFeedback
             bondType={bondType}
-            unbond
             listenIsValid={setBondValid}
             defaultBond={freeToUnbondToMin}
             setters={[
@@ -138,7 +143,7 @@ export const UnbondSome = (props: any) => {
               Once unbonding, you must wait {bondDuration} eras for your funds
               to become available.
             </p>
-            {TxFee}
+            <EstimatedTxFee />
           </NotesWrapper>
         </>
       </div>
@@ -146,7 +151,7 @@ export const UnbondSome = (props: any) => {
         setSection={setSection}
         submitTx={submitTx}
         submitting={submitting}
-        isValid={bondValid && accountHasSigner(signingAccount)}
+        isValid={bondValid && accountHasSigner(signingAccount) && txFeesValid}
       />
     </>
   );

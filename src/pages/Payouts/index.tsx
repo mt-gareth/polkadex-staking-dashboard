@@ -18,7 +18,7 @@ import { PayoutBar } from 'library/Graphs/PayoutBar';
 import { PageTitle } from 'library/PageTitle';
 import { useSize, formatSize } from 'library/Graphs/Utils';
 import { StatusLabel } from 'library/StatusLabel';
-import { OpenAssistantIcon } from 'library/OpenAssistantIcon';
+import { OpenHelpIcon } from 'library/OpenHelpIcon';
 import { useStaking } from 'contexts/Staking';
 import { MAX_PAYOUT_DAYS } from 'consts';
 import { AnySubscan } from 'types';
@@ -38,7 +38,7 @@ export const Payouts = (props: PageProps) => {
 
   const ref = useRef<HTMLDivElement>(null);
   const size = useSize(ref.current);
-  const { width, height, minHeight } = formatSize(size, 250);
+  const { width, height, minHeight } = formatSize(size, 300);
 
   // take non-zero rewards in most-recent order
   let payoutsList: AnySubscan = [
@@ -64,7 +64,7 @@ export const Payouts = (props: PageProps) => {
           <CardHeaderWrapper padded>
             <h4>
               Payout History
-              <OpenAssistantIcon page="payouts" title="Payout History" />
+              <OpenHelpIcon helpKey="Payout History" />
             </h4>
             <h2>
               {payouts.length ? (
@@ -106,8 +106,8 @@ export const Payouts = (props: PageProps) => {
                 transition: 'opacity 0.5s',
               }}
             >
-              <PayoutBar days={MAX_PAYOUT_DAYS} height="120px" />
-              <PayoutLine days={MAX_PAYOUT_DAYS} height="70px" />
+              <PayoutBar days={MAX_PAYOUT_DAYS} height="150px" />
+              <PayoutLine days={MAX_PAYOUT_DAYS} average={10} height="75px" />
             </div>
           </div>
         </GraphWrapper>

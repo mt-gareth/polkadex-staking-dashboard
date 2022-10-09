@@ -4,7 +4,6 @@
 import React from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
-import { useActivePool } from 'contexts/Pools/ActivePool';
 import { useApi } from 'contexts/Api';
 import { useUi } from 'contexts/UI';
 import { useBalances } from 'contexts/Balances';
@@ -23,48 +22,52 @@ import {
 } from 'theme/default';
 import { useTheme } from 'contexts/Themes';
 import { usePrices } from 'library/Hooks/usePrices';
-import { OpenAssistantIcon } from 'library/OpenAssistantIcon';
-import { BondOptions } from 'contexts/Balances/types';
+import { OpenHelpIcon } from 'library/OpenHelpIcon';
+import { useTransferOptions } from 'contexts/TransferOptions';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 export const BalanceGraph = () => {
   const { mode } = useTheme();
   const { network } = useApi();
-  const { units, features } = network;
+  const { units } = network;
   const { activeAccount } = useConnect();
-  const { getAccountBalance, getBondOptions } = useBalances();
+  const { getAccountBalance } = useBalances();
+  const { getTransferOptions } = useTransferOptions();
   const balance = getAccountBalance(activeAccount);
   const { services } = useUi();
   const prices = usePrices();
+
+  const allTransferOptions = getTransferOptions(activeAccount);
+  const { freeBalance } = allTransferOptions;
+
   const {
-    freeToBond,
     freeToUnbond: staked,
     totalUnlocking,
     totalUnlocked,
-  }: BondOptions = getBondOptions(activeAccount) || {};
-  const { getPoolBondOptions } = useActivePool();
+  } = allTransferOptions.nominate;
 
-  const poolBondOpions = getPoolBondOptions(activeAccount);
-  const unlocking = poolBondOpions.totalUnlocking
-    .add(poolBondOpions.totalUnlocked)
-    .add(totalUnlocked)
-    .add(totalUnlocking);
+  const poolBondOpions = allTransferOptions.pool;
+  const unlockingPools = poolBondOpions.totalUnlocking.add(
+    poolBondOpions.totalUnlocked
+  );
 
+  const unlocking = unlockingPools.add(totalUnlocked).add(totalUnlocking);
+
+  // get user's total balance
   const { free } = balance;
-
-  // get user's total free balance
-  const freeBase = planckBnToUnit(free, units);
+  const freeBase = planckBnToUnit(
+    free.add(poolBondOpions.active).add(unlockingPools),
+    units
+  );
 
   // convert balance to fiat value
-  const freeBalance = toFixedIfNecessary(
-    Number(freeBase * prices.lastPrice),
-    2
-  );
+  const freeFiat = toFixedIfNecessary(Number(freeBase * prices.lastPrice), 2);
 
   // graph data
   let graphStaked = planckBnToUnit(staked, units);
-  let graphFreeToStake = planckBnToUnit(freeToBond, units);
+  let graphFreeToStake = planckBnToUnit(freeBalance, units);
+
   let graphInPool = planckBnToUnit(poolBondOpions.active, units);
   let graphUnlocking = planckBnToUnit(unlocking, units);
 
@@ -98,8 +101,8 @@ export const BalanceGraph = () => {
           padding: 20,
           color: defaultThemes.text.primary[mode],
           font: {
-            size: 14,
-            weight: '500',
+            size: 13,
+            weight: '600',
           },
         },
       },
@@ -107,6 +110,9 @@ export const BalanceGraph = () => {
         displayColors: false,
         backgroundColor: defaultThemes.graphs.tooltip[mode],
         bodyColor: defaultThemes.text.invert[mode],
+        bodyFont: {
+          weight: '600',
+        },
         callbacks: {
           label: (context: any) => {
             return `${context.label}: ${
@@ -116,13 +122,13 @@ export const BalanceGraph = () => {
         },
       },
     },
-    cutout: '75%',
+    cutout: '78%',
   };
 
-  // determine stats from network features
-  let _labels = ['Available', 'Unlocking', 'Staking', 'In Pool'];
-  let _data = [graphFreeToStake, graphUnlocking, graphStaked, graphInPool];
-  let _colors = zeroBalance
+  // determine stats
+  const _labels = ['Available', 'Unlocking', 'Staking', 'In Pool'];
+  const _data = [graphFreeToStake, graphUnlocking, graphStaked, graphInPool];
+  const _colors = zeroBalance
     ? [
         defaultThemes.graphs.colors[1][mode],
         defaultThemes.graphs.inactive2[mode],
@@ -135,10 +141,6 @@ export const BalanceGraph = () => {
         networkColors[`${network.name}-${mode}`],
         networkColorsSecondary[`${network.name}-${mode}`],
       ];
-
-  _data = features.pools ? _data : _data.slice(0, 3);
-  _colors = features.pools ? _colors : _colors.slice(0, 3);
-  _labels = features.pools ? _labels : _labels.slice(0, 3);
 
   // default to a greyscale 50/50 donut on zero balance
   let dataSet;
@@ -165,26 +167,26 @@ export const BalanceGraph = () => {
 
   const ref = React.useRef<HTMLDivElement>(null);
   const size = useSize(ref.current);
-  const { width, height, minHeight } = formatSize(size, 220);
+  const { width, height, minHeight } = formatSize(size, 185);
 
   return (
     <>
-      <div className="head" style={{ paddingTop: '0' }}>
+      <div className="head">
         <h4>
           Balance
-          <OpenAssistantIcon page="overview" title="Your Balance" />
+          <OpenHelpIcon helpKey="Your Balance" />
         </h4>
         <h2>
           <span className="amount">{humanNumber(freeBase)}</span>&nbsp;
           {network.unit}
           <span className="fiat">
             {services.includes('binance_spot') && (
-              <>&nbsp;{usdFormatter.format(Number(freeBalance))}</>
+              <>&nbsp;{usdFormatter.format(Number(freeFiat))}</>
             )}
           </span>
         </h2>
       </div>
-      <div style={{ paddingTop: '20px' }} />
+      <div style={{ paddingTop: '1rem' }} />
       <div className="inner" ref={ref} style={{ minHeight }}>
         <div
           className="graph"
@@ -197,7 +199,7 @@ export const BalanceGraph = () => {
           <Doughnut options={options} data={data} />
         </div>
       </div>
-      <div style={{ paddingTop: '25px' }} />
+      <div style={{ paddingTop: '1rem' }} />
     </>
   );
 };

@@ -2,13 +2,12 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import { useState, useEffect, useRef } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faLockOpen } from '@fortawesome/free-solid-svg-icons';
 import { useBalances } from 'contexts/Balances';
 import { useConnect } from 'contexts/Connect';
 import { useModal } from 'contexts/Modal';
 import { useActivePool } from 'contexts/Pools/ActivePool';
-import { HeadingWrapper } from '../Wrappers';
+import { Title } from 'library/Modal/Title';
 import { Wrapper, FixedContentWrapper, CardsWrapper } from './Wrappers';
 import { Overview } from './Overview';
 import { Forms } from './Forms';
@@ -33,7 +32,7 @@ export const UnlockChunks = () => {
         unlocking = getPoolUnlocking();
         break;
       default:
-        console.error(`unlocking modal bond-type ${bondType} is not defined.`);
+      // console.error(`unlocking modal bond-type ${bondType} is not defined.`);
     }
     return unlocking;
   };
@@ -69,11 +68,13 @@ export const UnlockChunks = () => {
   return (
     <Wrapper>
       <FixedContentWrapper ref={headerRef}>
-        <HeadingWrapper>
-          <FontAwesomeIcon transform="grow-2" icon={faLockOpen} />
-          {unlocking.length > 0 && `${unlocking.length} `}Unlock
-          {unlocking.length === 1 ? '' : 's'}
-        </HeadingWrapper>
+        <Title
+          title={`${unlocking.length > 0 ? `${unlocking.length} ` : ``}Unlock${
+            unlocking.length === 1 ? '' : 's'
+          }`}
+          icon={faLockOpen}
+          fixed
+        />
       </FixedContentWrapper>
       <CardsWrapper
         animate={section === 0 ? 'home' : 'next'}

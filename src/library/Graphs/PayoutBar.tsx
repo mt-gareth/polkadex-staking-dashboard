@@ -54,9 +54,11 @@ export const PayoutBar = (props: PayoutBarProps) => {
 
   const { units } = network;
   const notStaking = !isSyncing && inSetup() && !membership;
+  const average = 1;
 
   const { payoutsByDay, poolClaimsByDay } = formatRewardsForGraphs(
     days,
+    average,
     units,
     payouts,
     poolClaims
@@ -104,7 +106,7 @@ export const PayoutBar = (props: PayoutBarProps) => {
     responsive: true,
     maintainAspectRatio: false,
     barPercentage: 0.4,
-    maxBarThickness: 11,
+    maxBarThickness: 13,
     scales: {
       x: {
         stacked: true,
@@ -143,6 +145,9 @@ export const PayoutBar = (props: PayoutBarProps) => {
         displayColors: false,
         backgroundColor: defaultThemes.graphs.tooltip[mode],
         bodyColor: defaultThemes.text.invert[mode],
+        bodyFont: {
+          weight: '600',
+        },
         callbacks: {
           title: () => {
             return [];

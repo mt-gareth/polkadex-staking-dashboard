@@ -14,8 +14,10 @@ import { useConnect } from 'contexts/Connect';
 import { Warning } from 'library/Form/Warning';
 import { usePoolMemberships } from 'contexts/Pools/PoolMemberships';
 import { useActivePool } from 'contexts/Pools/ActivePool';
+import { EstimatedTxFee } from 'library/EstimatedTxFee';
+import { useTxFees } from 'contexts/TxFees';
+import { Title } from 'library/Modal/Title';
 import {
-  HeadingWrapper,
   FooterWrapper,
   Separator,
   NotesWrapper,
@@ -28,7 +30,8 @@ export const ChangeNominations = () => {
   const { getBondedAccount, getAccountNominations } = useBalances();
   const { setStatus: setModalStatus, config } = useModal();
   const { membership } = usePoolMemberships();
-  const { poolNominations, isNominator } = useActivePool();
+  const { poolNominations, isNominator, isOwner } = useActivePool();
+  const { txFeesValid } = useTxFees();
 
   const { nominations: newNominations, provider, bondType } = config;
 
@@ -52,11 +55,10 @@ export const ChangeNominations = () => {
     setValid(nominations.length > 0);
   }, [nominations]);
 
-  // ensure selected membership and targests are valid
+  // ensure selected membership and targets are valid
   let isValid = nominations.length > 0;
   if (isPool) {
-    isValid =
-      (membership && isNominator() && newNominations.length > 0) ?? false;
+    isValid = (membership && (isNominator() || isOwner())) ?? false;
   }
   useEffect(() => {
     setValid(isValid);
@@ -65,28 +67,41 @@ export const ChangeNominations = () => {
   // tx to submit
   const tx = () => {
     let _tx = null;
-    if (!valid || !api || !membership) {
+    if (!valid || !api || (isPool && !membership)) {
       return _tx;
     }
 
+    // targets submission differs between staking and pools
     const targetsToSubmit = newNominations.map((item: any) =>
       isPool
-        ? item?.address
+        ? item
         : {
             Id: item,
           }
     );
-    if (isPool && remaining !== 0) {
-      _tx = api.tx.nominationPools.nominate(membership.poolId, targetsToSubmit);
-    } else if (isStaking && remaining !== 0) {
-      _tx = api.tx.staking.nominate(targetsToSubmit);
-    } else if (isStaking && remaining === 0) {
-      _tx = api.tx.staking.chill();
+
+    if (isPool && membership) {
+      // if nominations remain, call nominate
+      if (remaining !== 0) {
+        _tx = api.tx.nominationPools.nominate(
+          membership.poolId,
+          targetsToSubmit
+        );
+      } else {
+        // wishing to stop all nominations, call chill
+        _tx = api.tx.nominationPools.chill(membership.poolId);
+      }
+    } else if (isStaking) {
+      if (remaining !== 0) {
+        _tx = api.tx.staking.nominate(targetsToSubmit);
+      } else {
+        _tx = api.tx.staking.chill();
+      }
     }
     return _tx;
   };
 
-  const { submitTx, estimatedFee, submitting } = useSubmitExtrinsic({
+  const { submitTx, submitting } = useSubmitExtrinsic({
     tx: tx(),
     from: signingAccount,
     shouldSubmit: valid,
@@ -103,65 +118,63 @@ export const ChangeNominations = () => {
   });
 
   return (
-    <PaddingWrapper verticalOnly>
-      <HeadingWrapper>
-        <FontAwesomeIcon transform="grow-2" icon={faStopCircle} />
-        Stop Nominating
-      </HeadingWrapper>
-      <div
-        style={{
-          padding: '0 1rem',
-          width: '100%',
-          boxSizing: 'border-box',
-        }}
-      >
-        {!nominations.length && <Warning text="You have no nominations set." />}
-        {isPool && !newNominations.length && (
-          <Warning text="A pool needs to have at least one nomination. If the intention is to delete the pool, the pool owner can destroy it." />
-        )}
-        {!accountHasSigner(signingAccount) && (
-          <Warning
-            text={`You must have your${
-              bondType === 'stake' ? ' controller' : ' '
-            }account imported to stop nominating.`}
-          />
-        )}
-        <h2>
-          Stop {!remaining ? 'All Nomination' : `${removing} Nomination`}
-          {remaining === 1 ? '' : 's'}
-        </h2>
-        <Separator />
-        <NotesWrapper>
-          <p>
-            Once submitted, your nominations will be removed from your dashboard
-            immediately, and will not be nominated from the start of the next
-            era.
-          </p>
-          <p>
-            Estimated Tx Fee:{' '}
-            {estimatedFee === null ? '...' : `${estimatedFee}`}
-          </p>
-        </NotesWrapper>
-        <FooterWrapper>
-          <div>
-            <button
-              type="button"
-              className="submit"
-              onClick={() => submitTx()}
-              disabled={
-                !valid || submitting || !accountHasSigner(signingAccount)
-              }
-            >
-              <FontAwesomeIcon
-                transform="grow-2"
-                icon={faArrowAltCircleUp as IconProp}
-              />
-              Submit
-            </button>
-          </div>
-        </FooterWrapper>
-      </div>
-    </PaddingWrapper>
+    <>
+      <Title title="Stop Nominating" icon={faStopCircle} />
+      <PaddingWrapper verticalOnly>
+        <div
+          style={{
+            padding: '0 1.25rem',
+            width: '100%',
+            boxSizing: 'border-box',
+          }}
+        >
+          {!nominations.length && (
+            <Warning text="You have no nominations set." />
+          )}
+          {!accountHasSigner(signingAccount) && (
+            <Warning
+              text={`You must have your${
+                bondType === 'stake' ? ' controller ' : ' '
+              }account imported to stop nominating.`}
+            />
+          )}
+          <h2>
+            Stop {!remaining ? 'All Nomination' : `${removing} Nomination`}
+            {removing === 1 ? '' : 's'}
+          </h2>
+          <Separator />
+          <NotesWrapper>
+            <p>
+              Once submitted, your nominations will be removed from your
+              dashboard immediately, and will not be nominated from the start of
+              the next era.
+            </p>
+            <EstimatedTxFee />
+          </NotesWrapper>
+          <FooterWrapper>
+            <div>
+              <button
+                type="button"
+                className="submit"
+                onClick={() => submitTx()}
+                disabled={
+                  !valid ||
+                  submitting ||
+                  !accountHasSigner(signingAccount) ||
+                  !txFeesValid
+                }
+              >
+                <FontAwesomeIcon
+                  transform="grow-2"
+                  icon={faArrowAltCircleUp as IconProp}
+                />
+                Submit
+              </button>
+            </div>
+          </FooterWrapper>
+        </div>
+      </PaddingWrapper>
+    </>
   );
 };
 

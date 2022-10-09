@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 import styled from 'styled-components';
-import { SECTION_FULL_WIDTH_THRESHOLD } from 'consts';
+import { SIDE_MENU_STICKY_THRESHOLD } from 'consts';
 import {
   textSecondary,
   backgroundSecondary,
@@ -11,7 +11,13 @@ import {
   cardShadow,
   shadowColor,
   networkColor,
+  textPrimary,
 } from 'theme';
+import {
+  CardHeaderWrapperProps,
+  CardWrapperProps,
+  GraphWrapperProps,
+} from './types';
 
 /* CardHeaderWrapper
  *
@@ -19,32 +25,32 @@ import {
  * with a h2. withAction allows a full-width header with a right-side
  * button.
  */
-export const CardHeaderWrapper = styled.div<any>`
+export const CardHeaderWrapper = styled.div<CardHeaderWrapperProps>`
   display: flex;
   flex-flow: ${(props) => (props.withAction ? 'row' : 'column')} wrap;
   width: 100%;
-  padding: ${(props) =>
-    props.padded ? '0.75rem 1.2rem 0.5rem 1.2rem' : '0.25rem'};
+  padding: ${(props) => (props.padded ? '0.5rem 1.2rem' : '0.25rem')};
 
   h2,
   h3 {
+    color: ${textPrimary};
     display: flex;
     flex-flow: row wrap;
     align-items: center;
     flex-grow: ${(props) => (props.withAction ? 1 : 0)};
 
-    .assistant-icon {
+    .help-icon {
       margin-left: 0.6rem;
     }
   }
   h4 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.6rem 0;
     display: flex;
     flex-flow: row wrap;
     align-items: center;
     justify-content: flex-start;
 
-    .assistant-icon {
+    .help-icon {
       margin-left: 0.5rem;
     }
   }
@@ -54,13 +60,13 @@ export const CardHeaderWrapper = styled.div<any>`
  *
  * Used to separate the main modules throughout the app.
  */
-export const CardWrapper = styled.div<any>`
+export const CardWrapper = styled.div<CardWrapperProps>`
   border: ${cardBorder} ${borderPrimary};
   box-shadow: ${cardShadow} ${shadowColor};
   box-sizing: border-box;
   padding: ${(props) =>
     props.noPadding ? '0rem' : props.transparent ? '0rem 0rem' : '1.2rem'};
-  border-radius: 1rem;
+  border-radius: 1.1rem;
   background: ${(props) => (props.transparent ? 'none' : backgroundSecondary)};
   display: flex;
   flex-flow: column nowrap;
@@ -68,20 +74,39 @@ export const CardWrapper = styled.div<any>`
   align-items: flex-start;
   flex: 1;
   width: 100%;
-  margin-top: ${(props) => (props.transparent ? '0rem' : '1rem')};
+  margin-top: ${(props) => (props.transparent ? '0rem' : '1.4rem')};
   position: relative;
+  ${(props) =>
+    props.transparent &&
+    `
+    border: none;
+    box-shadow: none;
+    background: none;
+  `}
 
-  @media (max-width: ${SECTION_FULL_WIDTH_THRESHOLD}px) {
+  @media (max-width: ${SIDE_MENU_STICKY_THRESHOLD}px) {
     padding: ${(props) =>
       props.noPadding
         ? '0rem'
         : props.transparent
         ? '0rem 0rem'
-        : '1rem 0.5rem'};
+        : '1rem 0.75rem'};
   }
 
-  @media (min-width: ${SECTION_FULL_WIDTH_THRESHOLD + 1}px) {
+  @media (min-width: ${SIDE_MENU_STICKY_THRESHOLD + 1}px) {
     height: ${(props) => (props.height ? `${props.height}px` : 'inherit')};
+  }
+
+  .content {
+    padding: 0 0.5rem;
+
+    h3 {
+      margin-bottom: 0.75rem;
+    }
+    h4 {
+      margin-top: 0;
+      margin-bottom: 0;
+    }
   }
 
   .inner {
@@ -107,20 +132,27 @@ export const CardWrapper = styled.div<any>`
  * Acts as a module, but used to wrap graphs.
  */
 
-export const GraphWrapper = styled.div<any>`
+export const GraphWrapper = styled.div<GraphWrapperProps>`
   border: ${cardBorder} ${borderPrimary};
   box-shadow: ${cardShadow} ${shadowColor};
   box-sizing: border-box;
   border-radius: 1rem;
-  background: ${(props) => (props.transparent ? 'none' : backgroundSecondary)};
+  background: ${backgroundSecondary};
   display: flex;
   flex-flow: column nowrap;
   align-content: flex-start;
   align-items: flex-start;
   flex: 1;
-  margin-top: ${(props) => (props.noMargin ? 0 : '1rem')};
   position: relative;
   overflow: hidden;
+  margin-top: ${(props) => (props.noMargin ? 0 : '1.4rem')};
+  ${(props) =>
+    props.transparent &&
+    `
+    border: none;
+    box-shadow: none;
+    background: none;
+  `}
 
   .inner {
     width: 100%;
@@ -132,7 +164,6 @@ export const GraphWrapper = styled.div<any>`
     right: 10px;
     top: 10px;
     font-size: 0.8rem;
-    font-variation-settings: 'wght' 550;
     background: ${networkColor};
     border-radius: 0.3rem;
     padding: 0.2rem 0.4rem;
@@ -140,7 +171,7 @@ export const GraphWrapper = styled.div<any>`
     opacity: 0.8;
   }
   .head {
-    padding: 0.75rem 1.2rem 0.5rem 1.2rem;
+    padding: 0.5rem 1.2rem;
   }
 
   h2 {
@@ -148,14 +179,13 @@ export const GraphWrapper = styled.div<any>`
       text-overflow: ellipsis;
       white-space: nowrap;
       overflow: hidden;
-      flex: 1;
     }
   }
 
   h2,
   h4 {
     margin: 0;
-    padding: 0.25rem 0;
+    padding: 0.25rem 0 0.5rem 0;
     display: flex;
     flex-flow: row wrap;
     align-content: flex-end;
@@ -163,10 +193,10 @@ export const GraphWrapper = styled.div<any>`
     justify-content: flex-start;
 
     .fiat {
-      font-size: 1rem;
       color: ${textSecondary};
+      font-size: 1.1rem;
       margin-top: 0.2rem;
-      font-variation-settings: 'wght' 530;
+      margin-left: 0.3rem;
     }
   }
   h2 {
@@ -182,8 +212,17 @@ export const GraphWrapper = styled.div<any>`
     align-items: center;
     margin-top: 0.4rem;
 
-    .assistant-icon {
-      margin-left: 0.4rem;
+    .help-icon {
+      margin-left: 0.55rem;
+    }
+  }
+
+  h5 {
+    &.secondary {
+      color: ${textSecondary};
+      opacity: 0.7;
+      margin-bottom: 0;
+      margin-top: 1.5rem;
     }
   }
   .small_button {
@@ -197,12 +236,11 @@ export const GraphWrapper = styled.div<any>`
     flex-flow: row wrap;
     justify-content: center;
     width: 100%;
-    padding: 1rem 1.2rem;
+    padding: 1rem 1.5rem;
   }
   .graph_line {
-    margin-top: 1.5rem;
-    margin-left: 1rem;
-    padding: 1rem 1rem 0.5rem 1rem;
+    margin-top: 0.6rem;
+    padding: 0rem 1rem 0.5rem 0rem;
   }
   .graph_with_extra {
     width: 100%;
@@ -231,7 +269,6 @@ export const GraphWrapper = styled.div<any>`
     color: white;
     border-radius: 0.75rem;
     padding: 0.15rem 0.5rem;
-    font-variation-settings: 'wght' 550;
     &.pos {
       background: #3eb955;
     }

@@ -26,6 +26,8 @@ export const textSecondary: theme.ThemeSet = theme(
 
 export const textInvert: theme.ThemeSet = theme(v, defaultThemes.text.invert);
 
+export const textWarning: theme.ThemeSet = theme(v, defaultThemes.text.warning);
+
 export const textDanger: theme.ThemeSet = theme(v, defaultThemes.text.danger);
 
 export const textSuccess: theme.ThemeSet = theme(v, defaultThemes.text.success);
@@ -55,6 +57,11 @@ export const backgroundNetworkBar: theme.ThemeSet = theme(
 export const backgroundDropdown: theme.ThemeSet = theme(
   v,
   defaultThemes.background.dropdown
+);
+
+export const backgroundModalItem: theme.ThemeSet = theme(
+  v,
+  defaultThemes.background.modalitem
 );
 
 export const backgroundValidator: theme.ThemeSet = theme(
@@ -106,9 +113,24 @@ export const backgroundToggle: theme.ThemeSet = theme(
   defaultThemes.buttons.toggle.background
 );
 
-export const buttonAssistantBackground: theme.ThemeSet = theme(
+export const buttonHelpBackground: theme.ThemeSet = theme(
   v,
-  defaultThemes.buttons.assistant.background
+  defaultThemes.buttons.help.background
+);
+
+export const buttonHoverBackground: theme.ThemeSet = theme(
+  v,
+  defaultThemes.buttons.hover.background
+);
+
+export const buttonDisabledBackground: theme.ThemeSet = theme(
+  v,
+  defaultThemes.buttons.disabled.background
+);
+
+export const buttonDisabledText: theme.ThemeSet = theme(
+  v,
+  defaultThemes.buttons.disabled.text
 );
 
 // labels
@@ -151,21 +173,43 @@ export const modalBackground: theme.ThemeSet = theme(
   defaultThemes.modal.background
 );
 
-// assistant
+// help
 
-export const assistantBackground: theme.ThemeSet = theme(
+export const helpButton: theme.ThemeSet = theme(
   v,
-  defaultThemes.assistant.background
+  defaultThemes.help.button.background
 );
 
-export const assistantButton: theme.ThemeSet = theme(
+// status colors
+
+export const danger: theme.ThemeSet = theme(
   v,
-  defaultThemes.assistant.button.background
+  defaultThemes.status.danger.solid
 );
 
-export const assistantLink: theme.ThemeSet = theme(
+export const dangerTransparent: theme.ThemeSet = theme(
   v,
-  defaultThemes.assistant.link
+  defaultThemes.status.danger.transparent
+);
+
+export const warning: theme.ThemeSet = theme(
+  v,
+  defaultThemes.status.warning.solid
+);
+
+export const warningTransparent: theme.ThemeSet = theme(
+  v,
+  defaultThemes.status.warning.transparent
+);
+
+export const success: theme.ThemeSet = theme(
+  v,
+  defaultThemes.status.success.solid
+);
+
+export const successTransparent: theme.ThemeSet = theme(
+  v,
+  defaultThemes.status.success.transparent
 );
 
 // shadow

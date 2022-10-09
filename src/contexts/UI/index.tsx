@@ -6,29 +6,31 @@ import React, { useState, useEffect, useRef } from 'react';
 import { SERVICES, SIDE_MENU_STICKY_THRESHOLD } from 'consts';
 import { localStorageOrDefault, setStateWithRef } from 'Utils';
 import { ImportedAccount } from 'contexts/Connect/types';
-import { MaybeAccount } from 'types';
+import { MaybeAccount, Sync } from 'types';
+import { useActivePool } from 'contexts/Pools/ActivePool';
+import { usePoolMemberships } from 'contexts/Pools/PoolMemberships';
 import { useConnect } from '../Connect';
 import { useNetworkMetrics } from '../Network';
 import { useStaking } from '../Staking';
-import { useValidators } from '../Validators';
 import { useBalances } from '../Balances';
 import { useApi } from '../Api';
-import { defaultUIContext } from './defaults';
-import { UIContextInterface } from './types';
+import * as defaults from './defaults';
+import { SetupType, UIContextInterface } from './types';
 
-export const UIContext =
-  React.createContext<UIContextInterface>(defaultUIContext);
+export const UIContext = React.createContext<UIContextInterface>(
+  defaults.defaultUIContext
+);
 
 export const useUi = () => React.useContext(UIContext);
 
 export const UIProvider = ({ children }: { children: React.ReactNode }) => {
-  const { isReady, consts, network } = useApi();
+  const { isReady, network } = useApi();
   const { accounts: connectAccounts, activeAccount } = useConnect();
   const { staking, eraStakers, inSetup } = useStaking();
-  const { meta, session } = useValidators();
-  const { maxNominatorRewardedPerValidator } = consts;
   const { metrics } = useNetworkMetrics();
   const { accounts } = useBalances();
+  const { membership: poolMembership } = usePoolMemberships();
+  const { synced: activePoolSynced } = useActivePool();
 
   // set whether app is syncing
   const [isSyncing, setIsSyncing] = useState(false);
@@ -50,7 +52,7 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // get side menu minimised state from local storage, default to not
-  const _userSideMenuMinimised: any = Number(
+  const _userSideMenuMinimised = Number(
     localStorageOrDefault('side_menu_minimised', 0)
   );
 
@@ -75,17 +77,14 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
   );
 
   // is the user actively on the setup page
-  const [onSetup, setOnSetup] = useState(0);
+  const [onNominatorSetup, setOnNominatorSetup] = useState(0);
+
+  // is the user actively on the pool creation page
+  const [onPoolSetup, setOnPoolSetup] = useState(0);
 
   // services
   const [services, setServices] = useState(getAvailableServices());
   const servicesRef = useRef(services);
-
-  // validator filtering
-  const [validatorFilters, setValidatorFilters]: any = useState([]);
-
-  // validator ordering
-  const [validatorOrder, setValidatorOrder]: any = useState('default');
 
   // staking setup persist
   const [setup, setSetup]: any = useState([]);
@@ -100,12 +99,15 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // go to active page once staking setup completes / network change
+  // move away from setup pages on completion / network change
   useEffect(() => {
     if (!inSetup()) {
-      setOnSetup(0);
+      setOnNominatorSetup(0);
     }
-  }, [inSetup(), network]);
+    if (poolMembership) {
+      setOnPoolSetup(0);
+    }
+  }, [inSetup(), network, poolMembership]);
 
   // resize event listener
   useEffect(() => {
@@ -158,193 +160,16 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
       syncing = true;
     }
 
+    // nomination pool contexts have synced
+    if (activePoolSynced !== Sync.Synced) {
+      syncing = true;
+    }
+
     setIsSyncing(syncing);
-  }, [isReady, staking, metrics, accounts, eraStakers]);
+  }, [isReady, staking, metrics, accounts, eraStakers, activePoolSynced]);
 
   const setSideMenu = (v: number) => {
     setSideMenuOpen(v);
-  };
-
-  const setValidatorsOrder = (by: string) => {
-    setValidatorOrder(by);
-  };
-
-  const setValidatorsFilter = (filter: any) => {
-    setValidatorFilters(filter);
-  };
-
-  // Validator list filtering functions
-
-  const toggleAllValidatorFilters = (toggle: number) => {
-    if (toggle) {
-      setValidatorsFilter([
-        'all_commission',
-        'blocked_nominations',
-        'over_subscribed',
-        'missing_identity',
-        'inactive',
-      ]);
-    } else {
-      setValidatorFilters([]);
-    }
-  };
-
-  const toggleFilterValidators = (f: string) => {
-    const filter = [...validatorFilters];
-    const action = filter.includes(f) ? 'remove' : 'push';
-
-    if (action === 'remove') {
-      const index = filter.indexOf(f);
-      filter.splice(index, 1);
-    } else {
-      filter.push(f);
-    }
-    setValidatorsFilter(filter);
-  };
-
-  const applyValidatorFilters = (
-    list: any,
-    batchKey: string,
-    filter: any = validatorFilters
-  ) => {
-    if (filter.includes('all_commission')) {
-      list = filterAllCommission(list);
-    }
-    if (filter.includes('blocked_nominations')) {
-      list = filterBlockedNominations(list);
-    }
-    if (filter.includes('over_subscribed')) {
-      list = filterOverSubscribed(list, batchKey);
-    }
-    if (filter.includes('missing_identity')) {
-      list = filterMissingIdentity(list, batchKey);
-    }
-    if (filter.includes('inactive')) {
-      list = filterInactive(list);
-    }
-    return list;
-  };
-
-  const resetValidatorFilters = () => {
-    setValidatorFilters([]);
-    setValidatorOrder('default');
-  };
-
-  const filterMissingIdentity = (list: any, batchKey: string) => {
-    if (meta[batchKey] === undefined) {
-      return list;
-    }
-    const filteredList: any = [];
-    for (const validator of list) {
-      const addressBatchIndex =
-        meta[batchKey].addresses?.indexOf(validator.address) ?? -1;
-
-      // if we cannot derive data, fallback to include validator in filtered list
-      if (addressBatchIndex === -1) {
-        filteredList.push(validator);
-        continue;
-      }
-
-      const identities = meta[batchKey]?.identities ?? [];
-      const supers = meta[batchKey]?.supers ?? [];
-
-      // push validator if sync has not completed
-      if (!identities.length || !supers.length) {
-        filteredList.push(validator);
-      }
-
-      const identityExists = identities[addressBatchIndex] ?? null;
-      const superExists = supers[addressBatchIndex] ?? null;
-
-      // validator included if identity or super identity has been set
-      if (identityExists !== null || superExists !== null) {
-        filteredList.push(validator);
-        continue;
-      }
-    }
-    return filteredList;
-  };
-
-  const filterOverSubscribed = (list: any, batchKey: string) => {
-    if (meta[batchKey] === undefined) {
-      return list;
-    }
-    const filteredList: any = [];
-    for (const validator of list) {
-      const addressBatchIndex =
-        meta[batchKey].addresses?.indexOf(validator.address) ?? -1;
-
-      // if we cannot derive data, fallback to include validator in filtered list
-      if (addressBatchIndex === -1) {
-        filteredList.push(validator);
-        continue;
-      }
-      const stake = meta[batchKey]?.stake ?? false;
-      if (!stake) {
-        filteredList.push(validator);
-        continue;
-      }
-      const totalNominations = stake[addressBatchIndex].total_nominations ?? 0;
-      if (totalNominations < maxNominatorRewardedPerValidator) {
-        filteredList.push(validator);
-        continue;
-      }
-    }
-    return filteredList;
-  };
-
-  const filterAllCommission = (list: any) => {
-    list = list.filter(
-      (validator: any) => validator?.prefs?.commission < 10
-    );
-    return list;
-  };
-
-  const filterBlockedNominations = (list: any) => {
-    list = list.filter((validator: any) => validator?.prefs?.blocked !== true);
-    return list;
-  };
-
-  const filterInactive = (list: any) => {
-    // if list has not yet been populated, return original list
-    if (session.list.length === 0) {
-      return list;
-    }
-    list = list.filter((validator: any) =>
-      session.list.includes(validator.address)
-    );
-    return list;
-  };
-
-  // Validator list ordering functions
-
-  const orderValidators = (by: string) => {
-    const order = validatorOrder === by ? 'default' : by;
-    setValidatorsOrder(order);
-  };
-
-  const applyValidatorOrder = (list: any, order: string) => {
-    if (order === 'commission') {
-      return orderLowestCommission(list);
-    }
-    return list;
-  };
-
-  const orderLowestCommission = (list: any) => {
-    const orderedList = [...list].sort(
-      (a: any, b: any) => a.prefs.commission - b.prefs.commission
-    );
-    return orderedList;
-  };
-
-  // Setup helper functions
-
-  const PROGRESS_DEFAULT = {
-    controller: null,
-    payee: null,
-    nominations: [],
-    bond: 0,
-    section: 1,
   };
 
   /*
@@ -353,92 +178,124 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
    */
   const setupDefault = () => {
     // generate setup objects from connected accounts
-    const _setup = connectAccounts.map((item: any) => {
-      // if there is existing config for an account, use that.
-      const localSetup = localStorage.getItem(
+    const _setup = connectAccounts.map((item) => {
+      const localStakeSetup = localStorage.getItem(
         `${network.name.toLowerCase()}_stake_setup_${item.address}`
       );
+      const localPoolSetup = localStorage.getItem(
+        `${network.name.toLowerCase()}_pool_setup_${item.address}`
+      );
+      const stakeProgress =
+        localStakeSetup !== null
+          ? JSON.parse(localStakeSetup)
+          : defaults.defaultStakeSetup;
 
-      // otherwise use the default values.
-      const progress =
-        localSetup !== null ? JSON.parse(localSetup) : PROGRESS_DEFAULT;
+      const poolProgress =
+        localPoolSetup !== null
+          ? JSON.parse(localPoolSetup)
+          : defaults.defaultPoolSetup;
 
       return {
         address: item.address,
-        progress,
+        progress: {
+          stake: stakeProgress,
+          pool: poolProgress,
+        },
       };
     });
     return _setup;
   };
 
   /*
-   * Gets the setup progress for a connected account.
+   * Gets the stake setup progress for a connected account.
    */
-  const getSetupProgress = (address: MaybeAccount) => {
-    // find the current setup progress from `setup`.
-    const _setup = setupRef.current.find(
-      (item: any) => item.address === address
-    );
+  const getSetupProgress = (type: SetupType, address: MaybeAccount) => {
+    const _setup = setupRef.current.find((s: any) => s.address === address);
 
     if (_setup === undefined) {
-      return PROGRESS_DEFAULT;
+      return type === SetupType.Stake
+        ? defaults.defaultStakeSetup
+        : defaults.defaultPoolSetup;
     }
-    return _setup.progress;
+    return _setup.progress[type];
   };
 
-  const getSetupProgressPercent = (address: string) => {
-    const setupProgress = getSetupProgress(address);
+  /*
+   * Gets the stake setup progress as a percentage for an address.
+   */
+  const getStakeSetupProgressPercent = (address: MaybeAccount) => {
+    if (!address) return 0;
+    const setupProgress = getSetupProgress(SetupType.Stake, address);
+
     const p = 25;
     let progress = 0;
     if (setupProgress.bond > 0) progress += p;
     if (setupProgress.controller !== null) progress += p;
     if (setupProgress.nominations.length) progress += p;
-    if (setupProgress.payee !== null) progress += p;
-
+    if (setupProgress.payee !== null) progress += p - 1;
     return progress;
   };
 
   /*
-   * Sets setup progress for an address
+   * Gets the stake setup progress as a percentage for an address.
    */
-  const setActiveAccountSetup = (progress: any) => {
+  const getPoolSetupProgressPercent = (address: MaybeAccount) => {
+    if (!address) return 0;
+    const setupProgress = getSetupProgress(SetupType.Pool, address);
+
+    const p = 25;
+    let progress = 0;
+    if (setupProgress.metadata !== '') progress += p;
+    if (setupProgress.bond > 0) progress += p;
+    if (setupProgress.nominations.length) progress += p;
+    if (setupProgress.roles !== null) progress += p - 1;
+    return progress;
+  };
+
+  /*
+   * Sets stake setup progress for an address.
+   * Updates localStorage followed by app state.
+   */
+  const setActiveAccountSetup = (type: SetupType, progress: any) => {
     if (!activeAccount) return;
 
-    // update local storage setup
     localStorage.setItem(
-      `${network.name.toLowerCase()}_stake_setup_${activeAccount}`,
+      `${network.name.toLowerCase()}_${type}_setup_${activeAccount}`,
       JSON.stringify(progress)
     );
 
-    // update context setup
-    const _setup = setupRef.current.map((obj: any) =>
+    const setupUpdated = setupRef.current.map((obj: any) =>
       obj.address === activeAccount
         ? {
             ...obj,
-            progress,
+            progress: {
+              ...obj.progress,
+              [type]: progress,
+            },
           }
         : obj
     );
-    setStateWithRef(_setup, setSetup, setupRef);
+    setStateWithRef(setupUpdated, setSetup, setupRef);
   };
 
   /*
    * Sets active setup section for an address
    */
-  const setActiveAccountSetupSection = (section: number) => {
+  const setActiveAccountSetupSection = (type: SetupType, section: number) => {
     if (!activeAccount) return;
 
     // get current progress
     const _accountSetup = [...setupRef.current].find(
-      (item: any) => item.address === activeAccount
+      (item) => item.address === activeAccount
     );
 
     // abort if setup does not exist
     if (_accountSetup === null) {
       return;
     }
+
     // amend section
-    _accountSetup.progress.section = section;
+    _accountSetup.progress[type].section = section;
 
     // update context setup
     const _setup = setupRef.current.map((obj: any) =>
@@ -447,8 +304,8 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
 
     // update local storage
     localStorage.setItem(
-      `${network.name.toLowerCase()}_stake_setup_${activeAccount}`,
-      JSON.stringify(_accountSetup.progress)
+      `${network.name.toLowerCase()}_${type}_setup_${activeAccount}`,
+      JSON.stringify(_accountSetup.progress[type])
     );
 
     // update context
@@ -459,11 +316,11 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
    * Service toggling
    */
   const toggleService = (key: string) => {
-    let _services: any = [...services];
-    const found = _services.find((item: any) => item === key);
+    let _services = [...services];
+    const found = _services.find((item) => item === key);
 
     if (found) {
-      _services = _services.filter((_s: any) => _s !== key);
+      _services = _services.filter((_s) => _s !== key);
     } else {
       _services.push(key);
     }
@@ -476,32 +333,34 @@ export const UIProvider = ({ children }: { children: React.ReactNode }) => {
     return servicesRef.current;
   };
 
+  const [containerRefs, _setContainerRefs] = useState({});
+  const setContainerRefs = (v: any) => {
+    _setContainerRefs(v);
+  };
+
   return (
     <UIContext.Provider
       value={{
         setSideMenu,
         setUserSideMenuMinimised,
-        orderValidators,
-        applyValidatorOrder,
-        applyValidatorFilters,
-        resetValidatorFilters,
-        toggleFilterValidators,
-        toggleAllValidatorFilters,
         toggleService,
         getSetupProgress,
-        getSetupProgressPercent,
+        getStakeSetupProgressPercent,
+        getPoolSetupProgressPercent,
         setActiveAccountSetup,
         setActiveAccountSetupSection,
         getServices,
-        setOnSetup,
+        setOnNominatorSetup,
+        setOnPoolSetup,
+        setContainerRefs,
         sideMenuOpen,
         userSideMenuMinimised: userSideMenuMinimisedRef.current,
         sideMenuMinimised,
-        validatorFilters,
-        validatorOrder,
         services: servicesRef.current,
-        onSetup,
+        onNominatorSetup,
+        onPoolSetup,
         isSyncing,
+        containerRefs,
       }}
     >
       {children}

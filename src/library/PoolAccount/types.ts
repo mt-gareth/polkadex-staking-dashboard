@@ -6,9 +6,14 @@ export interface PoolAccountProps {
   pool?: any;
   filled?: boolean;
   fontSize?: string;
-  wallet?: boolean;
   canClick: any;
   onClick?: () => void;
   value?: string;
   title?: string | undefined;
+}
+
+export interface WrapperProps {
+  fill: string;
+  fontSize: string;
+  cursor: string;
 }
